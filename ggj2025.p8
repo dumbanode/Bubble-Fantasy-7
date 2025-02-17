@@ -41,7 +41,7 @@ end
 
 function draw_world()
 	draw_env()
-	draw_upgrades()
+	draw_hud_upgrades()
 	draw_particles()
 	draw_coins()
 	draw_shops()
@@ -234,20 +234,74 @@ end
 
 -- default player position
 default_plr={
-		x=50,
-		y=105,
-		x_imp=0,
-		y_imp=0,
+		pos={
+			x=50,
+			y=105,
+			x_imp=0,
+			y_imp=0,
+			move_amount=.1,
+		},
 		w=8,
 		h=8,
+		status={
+			is_big=false,
+			level=6,
+			coin_collected=0
+		},
 		dashing=0,
-		is_big=false,
-		level=6,
+		dash_timer=0,
+		
 		curr_sprite=-1,
 		spr_timer=30,
-		coin_collected=0,
-		move_amount=.1,
-		dash_timer=0
+		big_sprite=16,
+		
+		----------
+		-- draw --
+		----------
+		draw=function(self)
+			self:draw_base_spr()
+			self:draw_equipmnt()
+		end,
+		
+		-- draw player sprite
+		draw_equipmnt=function(self)
+			for i=2,6 do
+				xoff=0
+				yoff=0
+				if self.status.level >= i then
+					
+					-- grab the equipment spr
+					equip=equip_lvl[i]
+					is_big=plr.status.is_big
+					
+					-- if the player is big,
+					-- add an offset for the 
+					-- equipment
+					if is_big then
+					 xoff+=equip.bigxoff
+					end
+					if is_big then
+						yoff+=equip.bigyoff
+					end
+					
+					spr(
+						equip.sprite,
+						plr.pos.x +
+							(equip.xoff+xoff),
+						plr.pos.y
+							+ (equip.yoff+yoff)
+					)
+				end
+			end
+		end,
+
+		draw_base_spr=function(self)
+			if self.is_big then
+				spr(self.big_sprite, self.pos.x, self.pos.y, 2, 2)
+			else
+				spr(self.sprite, self.pos.x, self.pos.y)
+			end
+		end		
 	}
 
 -- reset the player
@@ -265,7 +319,6 @@ function update_plr()
 end
 
 -- movement
-move_amount=.1
 max_x=105
 min_x=18
 max_y=119
@@ -274,40 +327,41 @@ min_y=0
 -- move the player
 function move_plr()
 	-- calculate the amounts to move
+	mv_amt=plr.pos.move_amount
 	x_to_use=
-		move_amount*plr.x_imp
+		mv_amt*plr.pos.x_imp
 	y_to_use=
-		move_amount*plr.y_imp
+		mv_amt*plr.pos.y_imp
 	
 	-- ensure the player doesnt
 	-- clip outside
-	if plr.x>max_x then
+	if plr.pos.x>max_x then
 		plr.x=max_x
-	elseif plr.x<min_x then
-		plr.x=min_x+1
+	elseif plr.pos.x<min_x then
+		plr.pos.x=min_x+1
 		
 	-- update x direction
 	else
 		plr.x=
 			update_direction(
-				plr.x_imp,
-				plr.x
+				plr.pos.x_imp,
+				plr.pos.x
 			)
 	end
 	
 	-- ensure the player doesnt
 	-- clip outside
-	if plr.y>max_y then
-		plr.y=max_y
-	elseif plr.y<min_y then
-		plr.y=min_y+1
+	if plr.pos.y>max_y then
+		plr.pos.y=max_y
+	elseif plr.pos.y<min_y then
+		plr.pos.y=min_y+1
 		
 	-- update y direction
 	else
-		plr.y=
+		plr.pos.y=
 			update_direction(
-				plr.y_imp,
-				plr.y
+				plr.pos.y_imp,
+				plr.pos.y
 			)
 		end
 end
@@ -327,7 +381,7 @@ function update_direction(
 	imp, pos)
 	to_return=pos
 	val_to_use=
-		move_amount*imp
+		plr.pos.move_amount*imp
 	if imp>0 then
 		to_return+=val_to_use
 		to_return= 
@@ -340,6 +394,7 @@ function update_direction(
 	return to_return
 end
 
+-- what am i doing here?
 dash_reset=40
 dash_cooldown_timeout=30
 dash_slow_timeout=5
@@ -372,14 +427,14 @@ function update_btn()
 	-- update x impulses
 	if btnd(⬅️) then
 		if is_dashing==0 then
-			plr.x_imp = mid(-max_imp, plr.x_imp - imp_amount, max_imp)
+			plr.pos.x_imp = mid(-max_imp, plr.pos.x_imp - imp_amount, max_imp)
 		end
 		play_sfx=true
 	end
 	
 	if btnd(➡️) then
 		if is_dashing==0 then
-			plr.x_imp = mid(-max_imp, plr.x_imp + imp_amount, max_imp)
+			plr.pos.x_imp = mid(-max_imp, plr.pos.x_imp + imp_amount, max_imp)
 		end
 		play_sfx=true
 	end
@@ -387,31 +442,33 @@ function update_btn()
 	-- update y impulses	
 	if btnd(⬆️) then
 		if is_dashing==0 then
-			plr.y_imp = mid(-max_imp, plr.y_imp - imp_amount, max_imp)
+			plr.pos.y_imp = mid(-max_imp, plr.pos.y_imp - imp_amount, max_imp)
 		end
 		play_sfx=true
 	end
 	
 	if btnd(⬇️) then
 		if is_dashing==0 then
-			plr.y_imp = mid(-max_imp, plr.y_imp + imp_amount, max_imp)
+			plr.pos.y_imp = mid(-max_imp, plr.pos.y_imp + imp_amount, max_imp)
 		end
 		play_sfx=true
 	end
 	
-	if btnd(4) and 
+	if btnd(5) and 
 		is_dashing==0 then
 		plr.dashing=1
-		plr.x_imp = -1*dash_amount
+		plr.pos.x_imp = -1*dash_amount
 		sfx(2)
-	elseif btnd(5)
+	elseif btnd(4)
 		and is_dashing==0 then
 		plr.dashing=1
-		plr.x_imp=dash_amount
+		plr.pos.x_imp=dash_amount
 		sfx(2)
 	end
 	
 	if play_sfx then
+		-- randomly determine if
+		-- we are playing sfx
 		num = flr(rnd(2)) + 1
 		if num==2 and 
 			is_dashing==0 then
@@ -422,7 +479,15 @@ function update_btn()
 	end
 end
 
--- update
+------------
+-- update --
+------------
+plr_spr={
+	[1]={0,1},
+	[2]={2,3},
+	[3]={4,5}
+}
+
 function update_plr_spr()
 	update_plr_anim()
 end
@@ -433,22 +498,22 @@ function update_plr_anim()
 		plr_spr[1]
 		
 	if not is_in_table(
-		spr_table, plr_curr_spr
+		spr_table, plr.sprite
 	) then
-		plr_curr_spr=spr_table[1]
+		plr.sprite=spr_table[1]
 	else
 		-- find the index in the table
 		-- use the value of the next index
 		local next_spr = spr_table[1]
 		for i = 1, #spr_table do
-			if spr_table[i] == plr_curr_spr then
+			if spr_table[i] == plr.sprite then
 				-- if at the last sprite, loop back to the first, else move to the next
 				next_spr = spr_table[i % #spr_table + 1]
 				break
 			end
 		end
 
-		plr_curr_spr = next_spr
+		plr.sprite = next_spr
 	
 	end
 end
@@ -457,7 +522,8 @@ end
 ----------
 -- draw --
 ----------
-
+-- table of sprites to draw
+-- according to current level
 equip_lvl={
 	[2]={
 		sprite=50,
@@ -496,58 +562,16 @@ equip_lvl={
 	},
 }
 
-function draw_equipmnt()
-	for i=2,6 do
-		xoff=0
-		yoff=0
-		if plr.level >= i then
-			
-			-- grab the equipment spr
-			equip=equip_lvl[i]
-			is_big=plr.is_big
-			
-			-- if the player is big,
-			-- add an offset for the 
-			-- equipment
-			if is_big then
-			 xoff+=equip.bigxoff
-			end
-			if is_big then
-				yoff+=equip.bigyoff
-			end
-			
-			spr(
-				equip.sprite,
-				plr.x +
-					(equip.xoff+xoff),
-				plr.y
-					+ (equip.yoff+yoff)
-			)
-		end
-	end
-end
+--function draw_plr()
+--	draw_plr_spr()
+--	draw_equipmnt()
+--end
 
-function draw_plr_spr()
-	-- update the player sprite
-	if plr.is_big then
-	 spr(
-		 16,
-		 plr_pos.x,
-		 plr_pos.y,
-		 2,2
-	 )
-	else
-		spr(
-		 plr.sprite,
-		 plr.x,
-		 plr.y)
-	end		
-end
+--function draw_equipmnt()
 
-function draw_plr()
-	draw_plr_spr()
-	draw_equipmnt()
-end
+--end
+
+
 
 
 
@@ -592,7 +616,7 @@ function draw_game()
 		plr.spr_timer+=1
 	end
 	
-	draw_plr()
+	plr:draw()
 	--debug_print()
 end
 
@@ -681,10 +705,10 @@ function draw_tut_text()
 	print("dash")
 end
 
-function draw_upgrades()
+function draw_hud_upgrades()
 	-- draw the staff
 	spr_to_use=64
-	if plr.level>1 then
+	if plr.status.level>1 then
 		spr_to_use=66
 	end
 	spr(
@@ -693,7 +717,7 @@ function draw_upgrades()
 		
 	-- draw the shield
 	spr_to_use=96
-	if plr.level>2 then
+	if plr.status.level>2 then
 		spr_to_use=98
 	end
 	spr(
@@ -1004,8 +1028,8 @@ function spawn_dash_particles()
 			for i=0,5 do
 				spawn_particle(
 					false,
-					plr.x+(-3+rnd(6)),
-					plr.y+2,
+					plr.pos.x+(-3+rnd(6)),
+					plr.pos.y+2,
 					dash_parts,
 					dash_clr,
 					nil,
@@ -1128,11 +1152,11 @@ end
 -->8
 --impulse management
 function damp_impulses()
-	plr.x_imp = 
-		damp_imp(plr.x_imp)
+	plr.pos.x_imp = 
+		damp_imp(plr.pos.x_imp)
 		
-	plr.y_imp = 
-		damp_imp(plr.y_imp)
+	plr.pos.y_imp = 
+		damp_imp(plr.pos.y_imp)
 end
 
 damp=.1
