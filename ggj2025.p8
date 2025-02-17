@@ -125,6 +125,26 @@ function draw_hud()
 		draw_tut_text()
 end
 
+-- funky zone
+obj={
+	pos={
+		x=0,
+		y=0
+	},
+	
+	new=function(self,tbl)
+		tbl=tbl or {}
+		setmetatable(tbl,{
+			__index=self
+		})
+		return tbl
+	end
+}
+
+inh_obj=obj:new({
+	pos.x=12,
+	pos.y=11
+})
 
 -->8
 --helper functions
@@ -193,7 +213,7 @@ end
 -- take two tables with coords
 -- calculate if they collide
 function check_col(
-obj_1, obj_2
+	obj_1, obj_2
 )
 	return obj_1.x < obj_2.x + obj_2.w and
 	 obj_1.x + obj_1.w > obj_2.x and
@@ -255,6 +275,23 @@ default_plr={
 		spr_timer=30,
 		big_sprite=16,
 		
+		init=function(self)
+			dash_timer=0
+			plr=default_plr
+			self:set_is_big(false)
+		end,
+		
+		set_is_big=function(self)
+			self.is_big=is_big
+			if is_big then
+				self.w=16
+				self.h=16
+			else
+				self.w=8
+				self.h=8
+			end
+		end,
+		
 		----------
 		-- draw --
 		----------
@@ -306,9 +343,8 @@ default_plr={
 
 -- reset the player
 function init_plr()
-	dash_timer=0
 	plr=default_plr
-	set_is_big(false)
+	plr:init()
 end
 
 function update_plr()
@@ -364,17 +400,6 @@ function move_plr()
 				plr.pos.y
 			)
 		end
-end
-
-function set_is_big(is_big)
-	plr.is_big=is_big
-	if is_big then
-		plr.w=16
-		plr.h=16
-	else
-		plr.w=8
-		plr.h=8
-	end
 end
 
 function update_direction(
