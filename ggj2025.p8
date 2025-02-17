@@ -131,6 +131,10 @@ obj={
 		x=0,
 		y=0
 	},
+	w=8,
+	h=8,
+	curr_sprite=-1
+	
 	
 	new=function(self,tbl)
 		tbl=tbl or {}
@@ -253,6 +257,17 @@ end
 -- player
 
 -- default player position
+default_plr=obj:new({
+	pos={
+			x=50,
+			y=105,
+			x_imp=0,
+			y_imp=0,
+			move_amount=.1,
+		},
+	
+})
+--[[
 default_plr={
 		pos={
 			x=50,
@@ -340,6 +355,7 @@ default_plr={
 			end
 		end		
 	}
+	--]]
 
 -- reset the player
 function init_plr()
