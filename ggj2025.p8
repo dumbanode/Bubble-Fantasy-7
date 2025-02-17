@@ -7,20 +7,14 @@ __lua__
 imp_amount=2.5
 max_imp=10
 
-plr_spr={
-	[1]={0,1},
-	[2]={2,3},
-	[3]={4,5}
-}
-
 function _init()
 	transition_to_state(states.title)
 end
 
 
-function is_in_table(spr_table, plr_curr_spr)
+function is_in_table(spr_table, to_find)
 	for key, this_spr in pairs(spr_table) do
-	 if this_spr == plr_curr_spr then
+	 if this_spr == to_find then
 	     return true
 	 end
 	end
