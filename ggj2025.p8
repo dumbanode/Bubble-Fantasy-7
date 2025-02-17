@@ -217,14 +217,6 @@ function debug_print()
 		plr.pos.y,
 		7
 	)
-	print(
-		count(curr_enemies),
-		7
-	)
-	print(
-		time(),
-		7
-	)
 	
 end
 
@@ -309,11 +301,22 @@ default_plr=obj:new({
 		------------
 		-- update --
 		------------
+		last_time=2,
 		update=function(self)
+			local curr_time=time()
+			local elapsed=
+				curr_time-self.last_time
+			
 			damp_impulses()
 			self:update_btn()
 			self:move()
-			--update_distance()
+			update_distance()
+			
+			if elapsed > 1 then
+				self:update_spr()
+				self.last_time=curr_time
+			end
+			
 		end,
 		
 		update_btn=function(self)
@@ -453,6 +456,34 @@ default_plr=obj:new({
 			return to_return
 		end,
 
+		update_spr=function(self)
+			-- determine the sprite
+			spr_table=
+				plr_spr[1]
+				
+			if not is_in_table(
+				spr_table,
+				self.sprites.curr_spr
+			) then
+				self.sprites.curr_spr=
+					spr_table[1]
+			else
+				-- find the index in the table
+				-- use the value of the next index
+				local next_spr = spr_table[1]
+				for i = 1, #spr_table do
+					if spr_table[i] == self.sprites.curr_spr then
+						-- if at the last sprite, loop back to the first, else move to the next
+						next_spr = spr_table[i % #spr_table + 1]
+						break
+					end
+				end
+		
+				self.sprites.curr_spr=
+					next_spr
+			
+			end
+		end,
 		
 		----------
 		-- draw --
@@ -498,100 +529,12 @@ default_plr=obj:new({
 			if self.is_big then
 				spr(self.big_sprite, self.pos.x, self.pos.y, 2, 2)
 			else
-				spr(self.sprite, self.pos.x, self.pos.y)
+				spr(self.sprites.curr_spr, 
+				self.pos.x, self.pos.y)
 			end
 		end		
 
 })
---[[
-default_plr={
-		pos={
-			x=50,
-			y=105,
-			x_imp=0,
-			y_imp=0,
-			move_amount=.1,
-		},
-		w=8,
-		h=8,
-		status={
-			is_big=false,
-			level=6,
-			coin_collected=0
-		},
-		dashing=0,
-		dash_timer=0,
-		
-		curr_sprite=-1,
-		spr_timer=30,
-		big_sprite=16,
-		
-		init=function(self)
-			dash_timer=0
-			plr=default_plr
-			self:set_is_big(false)
-		end,
-		
-		set_is_big=function(self)
-			self.is_big=is_big
-			if is_big then
-				self.w=16
-				self.h=16
-			else
-				self.w=8
-				self.h=8
-			end
-		end,
-		
-		----------
-		-- draw --
-		----------
-		draw=function(self)
-			self:draw_base_spr()
-			self:draw_equipmnt()
-		end,
-		
-		-- draw player sprite
-		draw_equipmnt=function(self)
-			for i=2,6 do
-				xoff=0
-				yoff=0
-				if self.status.level >= i then
-					
-					-- grab the equipment spr
-					equip=equip_lvl[i]
-					is_big=plr.status.is_big
-					
-					-- if the player is big,
-					-- add an offset for the 
-					-- equipment
-					if is_big then
-					 xoff+=equip.bigxoff
-					end
-					if is_big then
-						yoff+=equip.bigyoff
-					end
-					
-					spr(
-						equip.sprite,
-						plr.pos.x +
-							(equip.xoff+xoff),
-						plr.pos.y
-							+ (equip.yoff+yoff)
-					)
-				end
-			end
-		end,
-
-		draw_base_spr=function(self)
-			if self.is_big then
-				spr(self.big_sprite, self.pos.x, self.pos.y, 2, 2)
-			else
-				spr(self.sprite, self.pos.x, self.pos.y)
-			end
-		end		
-	}
-	--]]
 
 -- reset the player
 function init_plr()
@@ -599,14 +542,7 @@ function init_plr()
 	plr:init()
 end
 
-function update_plr()
-	--damp_impulses()
-	--update_btn()
-	--move_plr()
-	--update_distance()
-end
-
--- movement
+-- move to a world class?
 max_x=105
 min_x=18
 max_y=119
@@ -628,36 +564,6 @@ plr_spr={
 	[2]={2,3},
 	[3]={4,5}
 }
-
-function update_plr_spr()
-	update_plr_anim()
-end
-
-function update_plr_anim()
-	-- determine the sprite
-	spr_table=
-		plr_spr[1]
-		
-	if not is_in_table(
-		spr_table, plr.sprite
-	) then
-		plr.sprite=spr_table[1]
-	else
-		-- find the index in the table
-		-- use the value of the next index
-		local next_spr = spr_table[1]
-		for i = 1, #spr_table do
-			if spr_table[i] == plr.sprite then
-				-- if at the last sprite, loop back to the first, else move to the next
-				next_spr = spr_table[i % #spr_table + 1]
-				break
-			end
-		end
-
-		plr.sprite = next_spr
-	
-	end
-end
 
 
 ----------
@@ -703,15 +609,6 @@ equip_lvl={
 	},
 }
 
---function draw_plr()
---	draw_plr_spr()
---	draw_equipmnt()
---end
-
---function draw_equipmnt()
-
---end
-
 
 
 
@@ -751,7 +648,6 @@ function draw_game()
 	
 	-- update the player sprite
 	if plr.spr_timer>10 then
-		update_plr_spr()
 		plr.spr_timer=0
 	else
 		plr.spr_timer+=1
