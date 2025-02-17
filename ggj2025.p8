@@ -35,8 +35,8 @@ function update_world()
 	update_particles()
 	update_floor()
 	update_enemies()
-	update_coins()
-	update_shops()
+	--update_coins()
+	--update_shops()
 end
 
 function draw_world()
@@ -46,6 +46,7 @@ function draw_world()
 	draw_coins()
 	draw_shops()
 	draw_enemies()
+	debug_print()
 end
 
 function draw_env()
@@ -201,23 +202,19 @@ end
 
 function debug_print()
 	print(
-		plr_pos.x_imp,
+		plr.pos.x_imp,
 		7
 	)
 	print(
-		plr_pos.y_imp,
+		plr.pos.y_imp,
 		7
 	)
 	print(
-		plr_pos.x,
+		plr.pos.x,
 		7
 	)
 	print(
-		plr_pos.y,
-		7
-	)
-	print(
-		plr_pos.dashing,
+		plr.pos.y,
 		7
 	)
 	print(
@@ -225,9 +222,10 @@ function debug_print()
 		7
 	)
 	print(
-		count(shops),
+		time(),
 		7
 	)
+	
 end
 
 -- take two tables with coords
@@ -1191,7 +1189,7 @@ fish=obj:new({
 			y=-10,
 		}
 		self.dir=flr(rnd(2))
-		self.speed=.1+rnd(2),
+		self.speed=.1+rnd(2)
 	end,
 	
 	update=function(self)
@@ -1251,7 +1249,7 @@ function update_enemies()
 	
 	-- remove offscreen enemies
 	for e in all(to_remove) do
-		remove(to_remove, e)
+		del(to_remove, e)
 	end
 	
 	-- spawn more enemies
@@ -1270,16 +1268,32 @@ function check_enemy_col()
 	return false
 end
 
+last_time=0
+en_spawn_timeout=1
 function spawn_enemies()
+	-- spawn an ememy every
+	-- second
+	this_time=time()
+	elapsed=this_time-last_time
+	if elapsed > en_spawn_timeout do
+		last_time=this_time
+		spawn_fish()
+		spawn_jelly_fish()
+	end
+	
 end
 
 function spawn_fish()
-	f = fish:new()
-	f:init()
-	add(
-			curr_enemies,
-			f
-		)
+	chance=flr(rnd(3))
+	
+	if chance==1 then
+		f = fish:new()
+		f:init()
+		add(
+				curr_enemies,
+				f
+			)
+	end
 end
 
 function spawn_fish_bak()
