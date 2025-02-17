@@ -306,6 +306,136 @@ default_plr=obj:new({
 			end
 		end,
 		
+		------------
+		-- update --
+		------------
+		update=function(self)
+			damp_impulses()
+			self:update_btn()
+			self:move()
+			--update_distance()
+		end,
+		
+		update_btn=function(self)
+			play_sfx = false
+			is_dashing=self.status.dashing
+			if is_dashing>0 then
+				dash_timer+=1
+				
+				--player finished dashing
+				if dash_timer>dash_reset then
+					self.status.dashing=0
+					dash_timer=0
+					
+				--dash has come to a stop
+				--disable dashing until reset
+				elseif dash_timer>dash_cooldown_timeout
+					and dash_timer<dash_reset then
+					self.status.dashing=3
+					
+				--dash slow initial impulse
+				elseif dash_timer>dash_slow_timeout then
+					self.status.dashing=2
+					
+				end
+			end
+			
+			-- update x impulses
+			if btnd(⬅️) then
+				if is_dashing==0 then
+					self.pos.x_imp = mid(-max_imp, self.pos.x_imp - imp_amount, max_imp)
+				end
+				play_sfx=true
+			end
+			
+			if btnd(➡️) then
+				if is_dashing==0 then
+					self.pos.x_imp = mid(-max_imp, self.pos.x_imp + imp_amount, max_imp)
+				end
+				play_sfx=true
+			end
+		
+			-- update y impulses	
+			if btnd(⬆️) then
+				if is_dashing==0 then
+					self.pos.y_imp = mid(-max_imp, self.pos.y_imp - imp_amount, max_imp)
+				end
+				play_sfx=true
+			end
+			
+			if btnd(⬇️) then
+				if is_dashing==0 then
+					self.pos.y_imp = mid(-max_imp, self.pos.y_imp + imp_amount, max_imp)
+				end
+				play_sfx=true
+			end
+			
+			if btnd(5) and 
+				is_dashing==0 then
+				self.status.dashing=1
+				self.pos.x_imp = -1*dash_amount
+				sfx(2)
+			elseif btnd(4)
+				and is_dashing==0 then
+				self.status.dashing=1
+				plr.pos.x_imp=dash_amount
+				sfx(2)
+			end
+			
+			if play_sfx then
+				-- randomly determine if
+				-- we are playing sfx
+				num = flr(rnd(2)) + 1
+				if num==2 and 
+					is_dashing==0 then
+					sfx(0)
+				elseif num==2 then
+					sfx(3)
+				end
+			end
+		end,
+		
+		move=function(self)
+			-- calculate the amounts to move
+			mv_amt=self.pos.move_amount
+			x_to_use=
+				mv_amt*self.pos.x_imp
+			y_to_use=
+				mv_amt*self.pos.y_imp
+			
+			-- ensure the player doesnt
+			-- clip outside
+			if self.pos.x>max_x then
+				self.x=max_x
+			elseif self.pos.x<min_x then
+				self.pos.x=min_x+1
+				
+			-- update x direction
+			else
+				self.pos.x=
+					update_direction(
+						self.pos.x_imp,
+						self.pos.x
+					)
+			end
+			
+			-- ensure the player doesnt
+			-- clip outside
+			if self.pos.y>max_y then
+				self.pos.y=max_y
+			elseif self.pos.y<min_y then
+				self.pos.y=min_y+1
+				
+			-- update y direction
+			else
+				self.pos.y=
+					update_direction(
+						self.pos.y_imp,
+						self.pos.y
+					)
+			end
+		end,
+		
 		----------
 		-- draw --
 		----------
@@ -452,10 +582,10 @@ function init_plr()
 end
 
 function update_plr()
-	damp_impulses()
-	update_btn()
-	move_plr()
-	update_distance()
+	--damp_impulses()
+	--update_btn()
+	--move_plr()
+	--update_distance()
 end
 
 -- movement
@@ -463,48 +593,6 @@ max_x=105
 min_x=18
 max_y=119
 min_y=0
-
--- move the player
-function move_plr()
-	-- calculate the amounts to move
-	mv_amt=plr.pos.move_amount
-	x_to_use=
-		mv_amt*plr.pos.x_imp
-	y_to_use=
-		mv_amt*plr.pos.y_imp
-	
-	-- ensure the player doesnt
-	-- clip outside
-	if plr.pos.x>max_x then
-		plr.x=max_x
-	elseif plr.pos.x<min_x then
-		plr.pos.x=min_x+1
-		
-	-- update x direction
-	else
-		plr.x=
-			update_direction(
-				plr.pos.x_imp,
-				plr.pos.x
-			)
-	end
-	
-	-- ensure the player doesnt
-	-- clip outside
-	if plr.pos.y>max_y then
-		plr.pos.y=max_y
-	elseif plr.pos.y<min_y then
-		plr.pos.y=min_y+1
-		
-	-- update y direction
-	else
-		plr.pos.y=
-			update_direction(
-				plr.pos.y_imp,
-				plr.pos.y
-			)
-		end
-end
 
 function update_direction(
 	imp, pos)
@@ -529,84 +617,7 @@ dash_cooldown_timeout=30
 dash_slow_timeout=5
 dash_amount=25
 
-function update_btn()
-	play_sfx = false
-	is_dashing=plr.status.dashing
-	if is_dashing>0 then
-		dash_timer+=1
-		
-		--player finished dashing
-		if dash_timer>dash_reset then
-			plr.dashing=0
-			dash_timer=0
-			
-		--dash has come to a stop
-		--disable dashing until reset
-		elseif dash_timer>dash_cooldown_timeout
-			and dash_timer<dash_reset then
-			plr.dashing=3
-			
-		--dash slow initial impulse
-		elseif dash_timer>dash_slow_timeout then
-			plr.dashing=2
-			
-		end
-	end
-	
-	-- update x impulses
-	if btnd(⬅️) then
-		if is_dashing==0 then
-			plr.pos.x_imp = mid(-max_imp, plr.pos.x_imp - imp_amount, max_imp)
-		end
-		play_sfx=true
-	end
-	
-	if btnd(➡️) then
-		if is_dashing==0 then
-			plr.pos.x_imp = mid(-max_imp, plr.pos.x_imp + imp_amount, max_imp)
-		end
-		play_sfx=true
-	end
 
-	-- update y impulses	
-	if btnd(⬆️) then
-		if is_dashing==0 then
-			plr.pos.y_imp = mid(-max_imp, plr.pos.y_imp - imp_amount, max_imp)
-		end
-		play_sfx=true
-	end
-	
-	if btnd(⬇️) then
-		if is_dashing==0 then
-			plr.pos.y_imp = mid(-max_imp, plr.pos.y_imp + imp_amount, max_imp)
-		end
-		play_sfx=true
-	end
-	
-	if btnd(5) and 
-		is_dashing==0 then
-		plr.dashing=1
-		plr.pos.x_imp = -1*dash_amount
-		sfx(2)
-	elseif btnd(4)
-		and is_dashing==0 then
-		plr.dashing=1
-		plr.pos.x_imp=dash_amount
-		sfx(2)
-	end
-	
-	if play_sfx then
-		-- randomly determine if
-		-- we are playing sfx
-		num = flr(rnd(2)) + 1
-		if num==2 and 
-			is_dashing==0 then
-			sfx(0)
-		elseif num==2 then
-			sfx(3)
-		end
-	end
-end
 
 ------------
 -- update --
@@ -994,7 +1005,7 @@ end
 function update_game()
 	update_world()
 	update_hud()
-	update_plr()
+	plr:update()
 	update_timer()
 end
 
