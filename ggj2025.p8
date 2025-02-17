@@ -235,7 +235,7 @@ end
 function check_col(
 	obj_1, obj_2
 )
-	return obj_1.x < obj_2.x + obj_2.w and
+	return obj_1.pos.x < obj_2.pos.x + obj_2.dim.w and
 	 obj_1.pos.x + obj_1.dim.w > obj_2.pos.x and
 		obj_1.pos.y < obj_2.pos.y + obj_2.dim.h and
 		obj_1.pos.y + obj_1.dim.h > obj_2.pos.y
@@ -1177,19 +1177,22 @@ end
 -- enemies
 -- enemy declarations
 fish=obj:new({
-	pos={
-		x=18+rnd(90),
-		y=-10,
-	},
 	dim={
 		w=4,
 		h=4,
 	},
 	sprites={
-		curr_sprite=48,
+		curr_spr=48,
 	},
-	speed=.1+rnd(2),
-	dir=flr(rnd(2)),
+	
+	init=function(self)
+		self.pos={
+			x=18+rnd(90),
+			y=-10,
+		}
+		self.dir=flr(rnd(2))
+		self.speed=.1+rnd(2),
+	end,
 	
 	update=function(self)
 		self.pos.y+=world_speed
@@ -1234,66 +1237,48 @@ function update_enemy_behave()
 end
 
 function update_enemies()
+	to_remove={}
 	for e in all(curr_enemies) do
+		-- update each enemy
 		e:update()
+		
+		-- remove the enemy
+		-- if offscreen
+		if e.pos.y>130 then
+			add(to_remove, e)
+		end
 	end
-	spawn_fish()
-	--update_fish()
-	--if check_enemy_col() then
-	--	transition_to_state(states.game_over)
-	--end
+	
+	-- remove offscreen enemies
+	for e in all(to_remove) do
+		remove(to_remove, e)
+	end
+	
+	-- spawn more enemies
+	spawn_enemies()
+	if check_enemy_col() then
+		transition_to_state(states.game_over)
+	end
 end
 
 function check_enemy_col()
-	for enemy_type, enemies in pairs(curr_enemies) do
-		for this_e in all(enemies) do
-		  if check_col(plr, this_e) then
-		  	return true
-		  end
-		end
+	for this_e in all(curr_enemies) do
+	  if check_col(plr, this_e) then
+	  	return true
+	  end
 	end
 	return false
 end
 
-function update_fish()
-	to_remove={}
-	-- move all the fish down
-	for f in all(curr_enemies.fish) do
-		f.y+=world_speed
-		if f.y>130 then
-			add(to_remove, f)
-		end
-	end
-	
-	-- move fish left/right
-	for f in all(curr_enemies.fish) do
-		-- change dir if necessary
-		if f.x<15 then
-			f.dir=0
-		elseif f.x>108 then
-			f.dir=1
-		end
-		
-		if f.dir==0 then
-			f.x+=fish_move_speed
-		else
-			f.x-=fish_move_speed
-		end
-	end
-	
-	-- remove the fish
-	for f in all(to_remove) do
-		del(curr_enemies.fish, f)
-	end
-	
-	spawn_fish()
+function spawn_enemies()
 end
 
-
 function spawn_fish()
+	f = fish:new()
+	f:init()
 	add(
 			curr_enemies,
-			fish:new()
+			f
 		)
 end
 
