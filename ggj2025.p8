@@ -149,8 +149,12 @@ obj={
 	end,
 	
 	draw=function(self)
-		-- to be overwritten
-	end
+		spr(
+			self.sprites.curr_sprite,
+			self.pos.x, 
+			self.pos.y
+		)
+	end,
 	
 	update=function(self)
 		-- to be overwritten
@@ -785,14 +789,14 @@ function draw_coins()
 end
 
 function update_coins()
-	for c in all(coins) do
-		c.y+=world_speed
-		if c.y>130 then
-			del(coins, c)
-		end
-	end
+	--for c in all(coins) do
+	--	c.y+=world_speed
+	--	if c.y>130 then
+	--		del(coins, c)
+	--	end
+	--end
 	--check_coin_collision()
-	spawn_coins()
+	--spawn_coins()
 end
 
 function check_coin_collision()
@@ -1179,7 +1183,25 @@ fish=obj:new({
 		curr_sprite=48,
 	},
 	speed=.1+rnd(2),
-	dir=flr(rnd(2))
+	dir=flr(rnd(2)),
+	
+	update=function(self)
+		self.pos.y+=world_speed
+		
+		-- change direction
+		if self.pos.x<15 then
+			self.dir=0
+		elseif self.pos.x>108 then
+			self.dir=1
+		end
+		
+		-- move fish in direction
+		if self.dir==0 then
+			self.pos.x+=fish_move_speed
+		else
+			self.pos.x-=fish_move_speed
+		end
+	end
 })
 
 curr_enemies={}
@@ -1189,6 +1211,7 @@ function init_enemies()
 	max_fish=10
 	fish_move_speed=.1
 	curr_enemies={}
+	add(curr_enemies,fish:new())
 end
 
 -- update the enemy behavior
@@ -1200,6 +1223,9 @@ function update_enemy_behave()
 end
 
 function update_enemies()
+	for e in all(curr_enemies) do
+		e:update()
+	end
 	--update_fish()
 	--if check_enemy_col() then
 	--	transition_to_state(states.game_over)
@@ -1273,7 +1299,9 @@ function spawn_fish()
 end
 
 function draw_enemies()
-	draw_fish()
+	for e in all(curr_enemies) do
+		e:draw()
+	end
 end
 
 function draw_fish()
