@@ -131,10 +131,14 @@ obj={
 		x=0,
 		y=0
 	},
-	w=8,
-	h=8,
-	curr_sprite=-1
-	
+	dim={
+		w=8,
+		h=8,
+	},
+	sprites={
+		curr_sprite=-1,
+	},
+	status={},
 	
 	new=function(self,tbl)
 		tbl=tbl or {}
@@ -142,14 +146,16 @@ obj={
 			__index=self
 		})
 		return tbl
+	end,
+	
+	draw=function(self)
+		-- to be overwritten
+	end
+	
+	update=function(self)
+		-- to be overwritten
 	end
 }
-
-inh_obj=obj:new({
-	pos.x=12,
-	pos.y=11
-})
-
 -->8
 --helper functions
 function update_timer()
@@ -220,9 +226,9 @@ function check_col(
 	obj_1, obj_2
 )
 	return obj_1.x < obj_2.x + obj_2.w and
-	 obj_1.x + obj_1.w > obj_2.x and
-		obj_1.y < obj_2.y + obj_2.h and
-		obj_1.y + obj_1.h > obj_2.y
+	 obj_1.pos.x + obj_1.dim.w > obj_2.pos.x and
+		obj_1.pos.y < obj_2.pos.y + obj_2.dim.h and
+		obj_1.pos.y + obj_1.dim.h > obj_2.pos.y
 end
 
 
@@ -265,7 +271,81 @@ default_plr=obj:new({
 			y_imp=0,
 			move_amount=.1,
 		},
-	
+		status={
+			is_big=false,
+			level=6,
+			coin_collected=0,
+			dashing=0
+		},
+		
+		spr_timer=30,
+		big_sprite=16,
+		
+		init=function(self)
+			dash_timer=0
+			plr=default_plr
+			self:set_is_big(false)
+		end,
+		
+		set_is_big=function(self)
+			self.is_big=is_big
+			if is_big then
+				self.w=16
+				self.h=16
+			else
+				self.w=8
+				self.h=8
+			end
+		end,
+		
+		----------
+		-- draw --
+		----------
+		draw=function(self)
+			self:draw_base_spr()
+			self:draw_equipmnt()
+		end,
+		
+		-- draw player sprite
+		draw_equipmnt=function(self)
+			for i=2,6 do
+				xoff=0
+				yoff=0
+				if self.status.level >= i then
+					
+					-- grab the equipment spr
+					equip=equip_lvl[i]
+					is_big=plr.status.is_big
+					
+					-- if the player is big,
+					-- add an offset for the 
+					-- equipment
+					if is_big then
+					 xoff+=equip.bigxoff
+					end
+					if is_big then
+						yoff+=equip.bigyoff
+					end
+					
+					spr(
+						equip.sprite,
+						plr.pos.x +
+							(equip.xoff+xoff),
+						plr.pos.y
+							+ (equip.yoff+yoff)
+					)
+				end
+			end
+		end,
+
+		draw_base_spr=function(self)
+			if self.is_big then
+				spr(self.big_sprite, self.pos.x, self.pos.y, 2, 2)
+			else
+				spr(self.sprite, self.pos.x, self.pos.y)
+			end
+		end		
+
 })
 --[[
 default_plr={
@@ -443,7 +523,7 @@ dash_amount=25
 
 function update_btn()
 	play_sfx = false
-	is_dashing=plr.dashing
+	is_dashing=plr.status.dashing
 	if is_dashing>0 then
 		dash_timer+=1
 		
@@ -711,7 +791,7 @@ function update_coins()
 			del(coins, c)
 		end
 	end
-	check_coin_collision()
+	--check_coin_collision()
 	spawn_coins()
 end
 
@@ -1085,19 +1165,30 @@ function spawn_dash_particles()
 end
 -->8
 -- enemies
-curr_enemies={
-	fish={},
-	sharks={}
-}
+-- enemy declarations
+fish=obj:new({
+	pos={
+		x=18+rnd(90),
+		y=-10,
+	},
+	dim={
+		w=4,
+		h=4,
+	},
+	sprites={
+		curr_sprite=48,
+	},
+	speed=.1+rnd(2),
+	dir=flr(rnd(2))
+})
+
+curr_enemies={}
 
 function init_enemies()
 	curr_num_fish=1
 	max_fish=10
 	fish_move_speed=.1
-	curr_enemies={
-		fish={},
-		sharks={}
-	}
+	curr_enemies={}
 end
 
 -- update the enemy behavior
@@ -1109,10 +1200,10 @@ function update_enemy_behave()
 end
 
 function update_enemies()
-	update_fish()
-	if check_enemy_col() then
-		transition_to_state(states.game_over)
-	end
+	--update_fish()
+	--if check_enemy_col() then
+	--	transition_to_state(states.game_over)
+	--end
 end
 
 function check_enemy_col()
