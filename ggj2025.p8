@@ -136,7 +136,7 @@ obj={
 		h=8,
 	},
 	sprites={
-		curr_sprite=-1,
+		curr_spr=-1,
 	},
 	status={},
 	
@@ -148,12 +148,18 @@ obj={
 		return tbl
 	end,
 	
+	init=function(self)
+		-- to be overridden
+	end,
+	
 	draw=function(self)
-		spr(
-			self.sprites.curr_sprite,
-			self.pos.x, 
-			self.pos.y
-		)
+		if self.sprites.curr_spr != -1 then
+			spr(
+				self.sprites.curr_spr,
+				self.pos.x, 
+				self.pos.y
+			)
+		end
 	end,
 	
 	update=function(self)
@@ -1211,7 +1217,12 @@ function init_enemies()
 	max_fish=10
 	fish_move_speed=.1
 	curr_enemies={}
-	add(curr_enemies,fish:new())
+end
+
+function draw_enemies()
+	for e in all(curr_enemies) do
+		e:draw()
+	end
 end
 
 -- update the enemy behavior
@@ -1226,6 +1237,7 @@ function update_enemies()
 	for e in all(curr_enemies) do
 		e:update()
 	end
+	spawn_fish()
 	--update_fish()
 	--if check_enemy_col() then
 	--	transition_to_state(states.game_over)
@@ -1277,36 +1289,25 @@ function update_fish()
 	spawn_fish()
 end
 
+
 function spawn_fish()
+	add(
+			curr_enemies,
+			fish:new()
+		)
+end
+
+function spawn_fish_bak()
 	num_to_get=flr(rnd(50))
 	chance=flr(rnd(50))
 	
-	if count(curr_enemies.fish)<curr_num_fish 
+	if count(curr_enemies)<curr_num_fish 
 		and chance==num_to_get then
 		add(
-			curr_enemies.fish,
-			{
-				x=18+rnd(90),
-				y=-10,
-				w=4,
-				h=4,
-				speed=.1+rnd(2),
-				dir=flr(rnd(2))
-			}
+			curr_enemies,
+			fish:new()
 		)
 		num_to_get=flr(rnd(50))
-	end
-end
-
-function draw_enemies()
-	for e in all(curr_enemies) do
-		e:draw()
-	end
-end
-
-function draw_fish()
-	for f in all(curr_enemies.fish) do
-		spr(48, f.x, f.y) 
 	end
 end
 -->8
