@@ -413,7 +413,7 @@ default_plr=obj:new({
 			-- update x direction
 			else
 				self.pos.x=
-					update_direction(
+					self:update_direction(
 						self.pos.x_imp,
 						self.pos.x
 					)
@@ -429,12 +429,30 @@ default_plr=obj:new({
 			-- update y direction
 			else
 				self.pos.y=
-					update_direction(
+					self:update_direction(
 						self.pos.y_imp,
 						self.pos.y
 					)
 			end
 		end,
+		
+		update_direction=function(
+			self,imp,pos)
+			to_return=pos
+			val_to_use=
+				self.pos.move_amount*imp
+			if imp>0 then
+				to_return+=val_to_use
+				to_return= 
+					flr(to_return*10)/10
+			elseif imp<0 then
+				to_return+=val_to_use
+				to_return=
+					ceil(to_return*10)/10
+			end
+			return to_return
+		end,
+
 		
 		----------
 		-- draw --
@@ -593,23 +611,6 @@ max_x=105
 min_x=18
 max_y=119
 min_y=0
-
-function update_direction(
-	imp, pos)
-	to_return=pos
-	val_to_use=
-		plr.pos.move_amount*imp
-	if imp>0 then
-		to_return+=val_to_use
-		to_return= 
-			flr(to_return*10)/10
-	elseif imp<0 then
-		to_return+=val_to_use
-		to_return=
-			ceil(to_return*10)/10
-	end
-	return to_return
-end
 
 -- what am i doing here?
 dash_reset=40
