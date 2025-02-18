@@ -217,7 +217,10 @@ function debug_print()
 		plr.pos.y,
 		7
 	)
-	
+	print(
+		plr.val,
+		7
+	)
 end
 
 -- take two tables with coords
@@ -301,7 +304,7 @@ default_plr=obj:new({
 		------------
 		-- update --
 		------------
-		last_time=2,
+		last_time=-1,
 		update=function(self)
 			local curr_time=time()
 			local elapsed=
@@ -398,14 +401,7 @@ default_plr=obj:new({
 			end
 		end,
 		
-		move=function(self)
-			-- calculate the amounts to move
-			mv_amt=self.pos.move_amount
-			x_to_use=
-				mv_amt*self.pos.x_imp
-			y_to_use=
-				mv_amt*self.pos.y_imp
-			
+		move=function(self)			
 			-- ensure the player doesnt
 			-- clip outside
 			if self.pos.x>max_x then
@@ -444,6 +440,7 @@ default_plr=obj:new({
 			to_return=pos
 			val_to_use=
 				self.pos.move_amount*imp
+			self.val=val_to_use
 			if imp>0 then
 				to_return+=val_to_use
 				to_return= 
@@ -1296,17 +1293,17 @@ dash_slow_damp=1
 function damp_imp(impulse)
 	to_damp=damp
 	--initial burst of speed
-	if plr.dashing==1 then
+	if plr.status.dashing==1 then
 		to_damp=.001
 	--starting to slow down
-	elseif plr.dashing==2 then
+	elseif plr.status.dashing==2 then
 		to_damp=dash_slow_damp
 	-- normal speed, disable dash
-	elseif plr.dashing==3 then
+	elseif plr.status.dashing==3 then
 		to_damp=damp
 	end
 	
-	if plr.dashing!=3 then
+	if plr.status.dashing!=3 then
 		if (impulse>0) then
 			impulse-=to_damp
 			impulse = flr(impulse*10)/10
