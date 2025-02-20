@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
---- ggj2025
+--- world
 -- cameron smith
 -- jan 25, 2025 - sat
 imp_amount=2.5
@@ -34,11 +34,21 @@ world={
 		min_x=-1,
 		to_adjust=.7
 	},
+	speed=.1,
+	bk_clr=0,
+	
+	
+	init=function(self)
+		init_coins()
+		init_shops()
+		init_enemies()
+		self:init_floor()
+	end,
 		
 	update=function(self)
 		self:update_field()
 		update_particles()
-		update_floor()
+		self:update_floor()
 		update_enemies()
 		--update_coins()
 		--update_shops()
@@ -46,7 +56,7 @@ world={
 	
 	update_field=function(self)
 		if self.trans.max_x<0
-			and self.trans.min_x<0 then
+			or self.trans.min_x<0 then
 			return
 		end
 		
@@ -70,115 +80,87 @@ world={
 		
 		self.dim.min_x=ceil(self.dim.min_x*100)/100
 		self.dim.max_x=flr(self.dim.max_x*100)/100
-	end
-}
-
--- world
-function init_world()
-	world_speed=.1
-	bk_clr=0
+	end,
 	
-	init_coins()
-	init_shops()
-	init_enemies()
+	draw=function(self)
+		draw_enemies()
+		draw_particles()
+		self:draw_env()
+		draw_hud_upgrades()
+		draw_coins()
+		draw_shops()
+		debug_print()
+	end,
 	
-end
-
-function draw_world()
-	draw_enemies()
-	draw_particles()
-	draw_env()
-	draw_hud_upgrades()
-	draw_coins()
-	draw_shops()
-	debug_print()
-end
-
-function draw_env()
-	draw_fade()
-	draw_floor()
-	rectfill(
-		0,0,
-		world.dim.min_x,
-		128,
-		bk_clr)
-	rectfill(
-		world.dim.max_x+6,
-		0,
-		128,
-		128,
-		bk_clr)
-end
-
-fade={}
-
-function init_fade()
-	for i=0,15 do
-		add(
-			fade,
-			{
-				x=0 + (i * 8),
-				y=0,
-				sprite=70
-			}
-		)
-	end
-end
-
-function draw_fade()
-	for f in all(fade) do
-		spr(
-			f.sprite,
-			f.x,
-			f.y)
-	end
-end
-
-function draw_floor()
-	for f in all(floor) do
+	draw_env=function(self)
+		self:draw_floor()
+		rectfill(
+			0,0,
+			self.dim.min_x,
+			128,
+			bk_clr)
+		rectfill(
+			self.dim.max_x+6,
+			0,
+			128,
+			128,
+			self.bk_clr)
+	end,
+	
+	floor={},
+	init_floor=function(self)
+		for i=0,15 do
+			add(
+				self.floor,
+				{
+					x=0 + (i * 8),
+					y=112,
+					sprite=34
+				}
+			)
+		end
+		for i=0,15 do
+			add(
+				self.floor,
+				{
+					x=0 + (i * 8),
+					y=120,
+					sprite=35
+				}
+			)
+		end
+	end,
+	
+	draw_floor=function(self)
+		for f in all(self.floor) do
 			spr(
 			f.sprite,
 			f.x,
 			f.y)
+		end
+	end,
+	
+	update_floor=function(self)
+		for f in all(self.floor) do
+			f.y+=.1
+		end
+	end,
+	
+	draw_hud=function(self)
+		self:draw_tut_text()
+	end,
+	
+	draw_tut_text=function(self)
+		print("⬆️⬇️",0,50,7)
+		print("⬅️➡️")
+		print("move")
+		
+		print("")
+		print("❎🅾️")
+		print("dash")
 	end
-end
+}
 
-function update_floor()
-	for f in all(floor) do
-		f.y+=.1
-	end
-end
-
-floor={}
-
-function init_floor()
-	for i=0,15 do
-		add(
-			floor,
-			{
-				x=0 + (i * 8),
-				y=112,
-				sprite=34
-			}
-		)
-	end
-	for i=0,15 do
-		add(
-			floor,
-			{
-				x=0 + (i * 8),
-				y=120,
-				sprite=35
-			}
-		)
-	end
-end
-
-
--- hud
-function draw_hud()
-		draw_tut_text()
-end
 
 -- funky zone
 obj={
@@ -243,7 +225,7 @@ function update_distance()
 	dist_traveled.t+=1
 	elapsed=get_elapsed()
 	if elapsed%move_multiple==0 then
-		world_speed+=move_inc
+		world.speed+=move_inc
 	end
 	if elapsed%enemy_multiple==0 then
 		update_enemy_behave()
@@ -703,8 +685,8 @@ end
 
 function draw_game()
 	cls(1)
-	draw_world()
-	draw_hud()
+	world:draw()
+	world:draw_hud()
 	
 	-- update the player sprite
 	if plr.spr_timer>10 then
@@ -792,15 +774,6 @@ function check_coin_collision()
 	
 end
 
-function draw_tut_text()
-	print("⬆️⬇️",0,50,7)
-	print("⬅️➡️")
-	print("move")
-	
-	print("")
-	print("❎🅾️")
-	print("dash")
-end
 
 function draw_hud_upgrades()
 	-- draw the staff
@@ -924,12 +897,11 @@ function init_game()
 		m=0,
 		t=0
 	}
-	init_world()
+	world:init()
 	init_plr()
 	num_coins=0
 	setup_particles()
-	init_floor()
-	init_fade()
+	world:init_floor()
 end
 
 function init_game_over()
@@ -1056,7 +1028,7 @@ function update_one_dash_part(p)
 end
 
 function update_one_bg_part(p)
-	p.y+=p.speed*world_speed
+	p.y+=p.speed*world.speed
 	p.curr_life+=1
 	if p.curr_life>p.lifetime then
 		return false
@@ -1172,7 +1144,7 @@ fish=enemy:new({
 	end,
 	
 	update=function(self)
-		self.pos.y+=world_speed
+		self.pos.y+=world.speed
 		
 		-- change direction
 		if self.pos.x<
@@ -1209,7 +1181,7 @@ jelly=enemy:new({
 	end,
 	
 	update=function(self)
-		self.pos.y+=world_speed
+		self.pos.y+=world.speed
 	end,
 	
 	should_spawn=function(self)
