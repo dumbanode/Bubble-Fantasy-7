@@ -21,6 +21,58 @@ function is_in_table(spr_table, to_find)
 	return false
 end
 
+world={
+	dim={
+		max_x=105,
+		min_x=18,
+		max_y=119,
+		min_y=0
+		},
+		
+	trans={
+		max_x=-1,
+		min_x=-1,
+		to_adjust=.7
+	},
+		
+	update=function(self)
+		self:update_field()
+		update_particles()
+		update_floor()
+		update_enemies()
+		--update_coins()
+		--update_shops()
+	end,
+	
+	update_field=function(self)
+		if self.trans.max_x<0
+			and self.trans.min_x<0 then
+			return
+		end
+		
+		max_x=self.dim.max_x
+		to_max=self.trans.max_x
+		min_x=self.dim.min_x
+		to_min=self.trans.min_x
+		
+		to_adjust=self.trans.to_adjust
+		if max_x>to_max then
+			self.dim.max_x-=to_adjust
+		elseif max_x<to_max then
+			self.dim.max_x+=to_adjust
+		end
+		
+		if min_x>to_min then
+			self.dim.min_x-=to_adjust
+		elseif min_x<to_min then
+			self.dim.min_x+=to_adjust
+		end
+		
+		self.dim.min_x=ceil(self.dim.min_x*100)/100
+		self.dim.max_x=flr(self.dim.max_x*100)/100
+	end
+}
+
 -- world
 function init_world()
 	world_speed=.1
@@ -29,31 +81,33 @@ function init_world()
 	init_coins()
 	init_shops()
 	init_enemies()
-end
-
-function update_world()
-	update_particles()
-	update_floor()
-	update_enemies()
-	--update_coins()
-	--update_shops()
+	
 end
 
 function draw_world()
+	draw_enemies()
+	draw_particles()
 	draw_env()
 	draw_hud_upgrades()
-	draw_particles()
 	draw_coins()
 	draw_shops()
-	draw_enemies()
 	debug_print()
 end
 
 function draw_env()
 	draw_fade()
 	draw_floor()
-	rectfill(0,0,17,128,bk_clr)
-	rectfill(111,0,128,128,bk_clr)
+	rectfill(
+		0,0,
+		world.dim.min_x,
+		128,
+		bk_clr)
+	rectfill(
+		world.dim.max_x+6,
+		0,
+		128,
+		128,
+		bk_clr)
 end
 
 fade={}
@@ -218,7 +272,11 @@ function debug_print()
 		7
 	)
 	print(
-		plr.val,
+		world.dim.max_x,
+		7
+	)
+	print(
+		world.dim.min_x,
 		7
 	)
 end
@@ -423,10 +481,12 @@ default_plr=obj:new({
 		move=function(self)			
 			-- ensure the player doesnt
 			-- clip outside
-			if self.pos.x>max_x then
-				self.pos.x=max_x
-			elseif self.pos.x<min_x then
-				self.pos.x=min_x+1
+			if self.pos.x>
+				world.dim.max_x then
+					self.pos.x=world.dim.max_x-3
+			elseif self.pos.x<
+				world.dim.min_x then
+				self.pos.x=world.dim.min_x+1
 				
 			-- update x direction
 			else
@@ -439,10 +499,13 @@ default_plr=obj:new({
 			
 			-- ensure the player doesnt
 			-- clip outside
-			if self.pos.y>max_y then
-				self.pos.y=max_y
-			elseif self.pos.y<min_y then
-				self.pos.y=min_y+1
+			if self.pos.y>
+				world.dim.max_y then
+				self.pos.y=world.dim.max_y
+			elseif self.pos.y<
+				world.dim.min_y then
+				self.pos.y=
+					world.dim.min_y+1
 				
 			-- update y direction
 			else
@@ -559,10 +622,13 @@ function init_plr()
 end
 
 -- move to a world class?
-max_x=105
-min_x=18
-max_y=119
-min_y=0
+--max_x=105
+--max_x=80
+--min_x=18
+--min_x=30
+
+--max_y=119
+--min_y=0
 
 -- equipment level sprites
 equip_lvl={
@@ -894,7 +960,7 @@ end
 
 -- update 
 function update_game()
-	update_world()
+	world:update()
 	update_hud()
 	plr:update()
 	update_timer()
@@ -1109,9 +1175,11 @@ fish=enemy:new({
 		self.pos.y+=world_speed
 		
 		-- change direction
-		if self.pos.x<15 then
+		if self.pos.x<
+			world.dim.min_x+4 then
 			self.dir=0
-		elseif self.pos.x>108 then
+		elseif self.pos.x>
+			world.dim.max_x-4 then
 			self.dir=1
 		end
 		
