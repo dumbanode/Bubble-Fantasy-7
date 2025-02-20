@@ -11,16 +11,6 @@ function _init()
 	transition_to_state(states.title)
 end
 
-
-function is_in_table(spr_table, to_find)
-	for key, this_spr in pairs(spr_table) do
-	 if this_spr == to_find then
-	     return true
-	 end
-	end
-	return false
-end
-
 world={
 	dim={
 		max_x=105,
@@ -274,6 +264,14 @@ function check_col(
 		obj_1.pos.y + obj_1.dim.h > obj_2.pos.y
 end
 
+function is_in_table(spr_table, to_find)
+	for key, this_spr in pairs(spr_table) do
+	 if this_spr == to_find then
+	     return true
+	 end
+	end
+	return false
+end
 
 --button mgmt
 --https://gist.github.com/ricop/81702becf95eb331abf1aef24b87f0c7#file-btnd-lua
@@ -1316,6 +1314,20 @@ function spawn_fish_bak()
 end
 -->8
 --impulse management
+impulse_manager={
+	damp_imp=function(self,
+		impulse,to_damp)
+		if (impulse>0) then
+			impulse-=to_damp
+			impulse = flr(impulse*10)/10
+		elseif (impulse<0) then
+			impulse+=to_damp
+			impulse = ceil(impulse*10)/10
+		end
+		return impulse
+	end
+}
+
 function damp_impulses()
 	plr.pos.x_imp = 
 		damp_imp(plr.pos.x_imp)
@@ -1341,13 +1353,9 @@ function damp_imp(impulse)
 	end
 	
 	if plr.status.dashing!=3 then
-		if (impulse>0) then
-			impulse-=to_damp
-			impulse = flr(impulse*10)/10
-		elseif (impulse<0) then
-			impulse+=to_damp
-			impulse = ceil(impulse*10)/10
-		end
+		impulse=
+			impulse_manager:damp_imp(
+			impulse, to_damp)
 	end
 	return impulse
 end
