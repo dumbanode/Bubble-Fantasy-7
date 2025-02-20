@@ -280,6 +280,19 @@ default_plr=obj:new({
 			coin_collected=0,
 			dashing=0
 		},
+		sprites={
+			spr_table={
+				[1]={0,1},
+				[2]={2,3},
+				[3]={4,5}
+			}
+		},
+		dash_config={
+			dash_reset=40,
+			dash_cooldown_timeout=30,
+			dash_slow_timeout=5,
+			dash_amount=25
+		},
 		
 		spr_timer=30,
 		big_sprite=16,
@@ -329,18 +342,22 @@ default_plr=obj:new({
 				dash_timer+=1
 				
 				--player finished dashing
-				if dash_timer>dash_reset then
+				if dash_timer>
+					self.dash_config.dash_reset then
 					self.status.dashing=0
 					dash_timer=0
 					
 				--dash has come to a stop
 				--disable dashing until reset
-				elseif dash_timer>dash_cooldown_timeout
-					and dash_timer<dash_reset then
+				elseif dash_timer>
+					self.dash_config.dash_cooldown_timeout
+					and dash_timer<
+					self.dash_config.dash_reset then
 					self.status.dashing=3
 					
 				--dash slow initial impulse
-				elseif dash_timer>dash_slow_timeout then
+				elseif dash_timer>
+					self.dash_config.dash_slow_timeout then
 					self.status.dashing=2
 					
 				end
@@ -379,12 +396,14 @@ default_plr=obj:new({
 			if btnd(5) and 
 				is_dashing==0 then
 				self.status.dashing=1
-				self.pos.x_imp = -1*dash_amount
+				self.pos.x_imp=
+					-1*self.dash_config.dash_amount
 				sfx(2)
 			elseif btnd(4)
 				and is_dashing==0 then
 				self.status.dashing=1
-				plr.pos.x_imp=dash_amount
+				plr.pos.x_imp=
+					self.dash_config.dash_amount
 				sfx(2)
 			end
 			
@@ -405,7 +424,7 @@ default_plr=obj:new({
 			-- ensure the player doesnt
 			-- clip outside
 			if self.pos.x>max_x then
-				self.x=max_x
+				self.pos.x=max_x
 			elseif self.pos.x<min_x then
 				self.pos.x=min_x+1
 				
@@ -456,7 +475,7 @@ default_plr=obj:new({
 		update_spr=function(self)
 			-- determine the sprite
 			spr_table=
-				plr_spr[1]
+				self.sprites.spr_table[1]
 				
 			if not is_in_table(
 				spr_table,
@@ -545,29 +564,7 @@ min_x=18
 max_y=119
 min_y=0
 
--- what am i doing here?
-dash_reset=40
-dash_cooldown_timeout=30
-dash_slow_timeout=5
-dash_amount=25
-
-
-
-------------
--- update --
-------------
-plr_spr={
-	[1]={0,1},
-	[2]={2,3},
-	[3]={4,5}
-}
-
-
-----------
--- draw --
-----------
--- table of sprites to draw
--- according to current level
+-- equipment level sprites
 equip_lvl={
 	[2]={
 		sprite=50,
