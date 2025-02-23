@@ -866,27 +866,6 @@ function check_shop_collision()
 end
 -->8
 --game state
-states={
-	title=1,
-	game=2,
-	game_over=3
-}
-
-function transition_to_state_bak(state)
-	if state==states.title then
-		init_title()
-		curr_state=states.title
-	elseif state==states.game then
-		init_game()
-		curr_state=states.game
-	elseif state==states.game_over then
-		init_game_over()
-		curr_state=states.game_over
-	end	
-end
-
-function init_title()
-end
 
 function init_game()
 	dist_traveled={
@@ -916,28 +895,12 @@ function init_game_over()
 	sfx(1)
 end
 
-function _update_bak()
-	btn_update()
-	--[[
-	if curr_state==states.game then
-		update_game()
-	elseif curr_state==states.title then
-		update_title()
-	elseif curr_state==states.game_over then
-		update_game_over()
-	end]]
-end
-
 -- update 
 function update_game()
 	world:update()
 	update_hud()
 	plr:update()
 	update_timer()
-end
-
-function update_title()
-
 end
 
 function update_game_over()
@@ -971,41 +934,16 @@ state={
 
 state_mngr={
 	curr_state=-1,
-	states={
-		title=state:new({
-			name="title",
-			
-			update=function(self)
-				if btnu(4) or btnu(5) then
-					state_mngr.transition_to_state(
-						"game"
-					)
-				end
-			end,
-			
-			draw=function(self)
-				cls()
-				print(
-					"bubble fantasy 7",
-					32,80
-				)
-				print("    press ❎")
-				
-				print(
-					"created by: cameron smith",
-					15,110
-				)
-				print("  global game jam 2025")
-				map()
-			end
-			
-		})
-	},
+	states={},
+	
+	add=function(self,state)
+		self.states[state.name]=state
+	end,
 	
 	transition_to_state=function(
 		self, name_of_state)
 		-- set the current state
-		print(self.curr_state)
+		print(count(self.states))
 		self.curr_state=
 			self.states[name_of_state]
 		-- initialize the state
@@ -1020,6 +958,41 @@ state_mngr={
 		self.curr_state:draw()
 	end	
 }
+
+
+-------------------------------
+
+
+
+title=state:new({
+	name="title",
+	
+	update=function(self)
+		if btnu(4) or btnu(5) then
+			state_mngr.transition_to_state(
+				"game"
+			)
+		end
+	end,
+	
+	draw=function(self)
+		cls()
+		print(
+			"bubble fantasy 7",
+			32,80
+		)
+		print("    press ❎")
+		
+		print(
+			"created by: cameron smith",
+			15,110
+		)
+		print("  global game jam 2025")
+		map()
+	end
+})
+
+state_mngr:add(title)
 -->8
 --particles
 num_parts=15
