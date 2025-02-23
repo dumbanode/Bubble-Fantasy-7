@@ -14,13 +14,13 @@ end
 
 function _update()
 	btn_update()
-	test_emit:update()
+	trans_emit:update()
 	state_mngr:update()
 end
 
 function _draw()
 	state_mngr:draw()
-	test_emit:draw()
+	trans_emit:draw()
 end
 
 world={
@@ -264,7 +264,7 @@ function debug_print()
 		7
 	)
 	print(
-		count(test_emit.parts),
+		count(trans_emit.parts),
 		7
 	)
 end
@@ -912,12 +912,22 @@ state_mngr={
 
 title=state:new({
 	name="title",
+	timer=0,
 	
 	update=function(self)
 		if btnu(4) or btnu(5) then
-			state_mngr:transition_to_state(
-				"game"
-			)
+			sfx(2)
+			trans_emit:set_active(true)
+			self.timer=30
+		end
+		
+		if self.timer>0 then
+			self.timer-=1
+			if self.timer<=0 then
+				state_mngr:transition_to_state(
+					"game"
+				)
+			end
 		end
 	end,
 	
@@ -1195,7 +1205,7 @@ part_emit=obj:new({
 	},
 	
 	curr_time=0,
-	one_shot_timeout=30,
+	one_shot_timeout=15,
 	
 	set_active=function(self, val)
 		if val then
@@ -1242,10 +1252,12 @@ part_emit=obj:new({
 		end
 	end,
 	
+	parts_per_frame=100,
 	spawn_particles=function(self)
 		--while count(self.parts)
 		--	<self.max_parts do
-		for i=1,50 do
+		for i=1,self.parts_per_frame
+		 do
 			self:spawn_particle()
 		end
 	end,
@@ -1265,6 +1277,12 @@ part_emit=obj:new({
 		-- calculate radius
 		r_to_use=self.r[1]
 			+rnd(self.r[2])
+			
+		perc=self.curr_time
+			/self.one_shot_timeout
+			
+		r_to_use=r_to_use*perc
+		r_to_use=max(4,r_to_use)
 
 		add(
 				self.parts,
@@ -1276,7 +1294,7 @@ part_emit=obj:new({
 					dim={
 						r=r_to_use
 					},
-					speed=rnd(5),
+					speed=2+rnd(6),
 					curr_life=0,
 					lifetime=life_to_use,
 					clr=self.clr
@@ -1353,13 +1371,14 @@ trans_emit=part_emit:new({
 		w=128,
 		h=100,
 	},
-	r={6,10},
-	life={10,100},
+	r={5,10},
+	life={10,60},
 	clr=7,
-	one_shot=true
+	one_shot=true,
+	parts_per_frame=150,
+	one_shot_timeout=25,
 })
 
-trans_emit:set_active(true)
 -->8
 -- enemies
 -- enemy declarations
@@ -1824,7 +1843,7 @@ __sfx__
 000700000000023350283502a3502c3502e3502e3502e3502e3502d3502a350233501c3501a3501b3501c350203502135026350293502d3502b35027350203501d3501f350233502835029350273502635000000
 000100001055010550105500f5500f5500f5200f55028500295002a5002705027050270502705027050270502705021400204001f4001d4001d400123003a000360003600036000350003500035000310001b100
 00030000053500535006350083500a3500d35010350143501b3500e350103501235015350183501c350223502c350343500f350113501535017350193501c3501f35023350293502d35031350313503335038350
-000419060b550075500755016550005501c550145500a550225500c5501d5500e550135502b550095501c5500d5500355013550235500b5502455018550025501555007550135500d550165500a5501e5500e550
+00020000206502565024650246502565026650266502665026650256502565024650236502265021650206501f6501e6501c6501b65019650186501765017650166501565014650136501265011650106500f650
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
