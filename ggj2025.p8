@@ -14,11 +14,13 @@ end
 
 function _update()
 	btn_update()
+	test_emit:update()
 	state_mngr:update()
 end
 
 function _draw()
 	state_mngr:draw()
+	test_emit:draw()
 end
 
 world={
@@ -259,6 +261,10 @@ function debug_print()
 	)
 	print(
 		world.dim.min_x,
+		7
+	)
+	print(
+		count(test_emit.parts),
 		7
 	)
 end
@@ -970,7 +976,7 @@ game=state:new({
 		end
 		
 		plr:draw()
-		--debug_print()
+		debug_print()
 	end
 	
 })
@@ -1192,6 +1198,16 @@ part_emit=obj:new({
 		if self.active then
 			self:spawn_particles()
 		end
+		
+		for part in all(self.parts) do
+			part:update()
+		end
+	end,
+	
+	draw=function(self)
+		for part in all(self.parts) do
+			part:draw()
+		end
 	end,
 	
 	spawn_particles=function(self)
@@ -1213,20 +1229,24 @@ part_emit=obj:new({
 		life_to_use=self.part_config.life[0]
 			+rnd(self.part_config.life[1])
 		
-		
+		-- calculate radius
 		r_to_use=self.part_config.r[0]
 			+rnd(self.part_config.r[1])
 		
 		add(
 				self.parts,
 				part:new({
-					x=x_to_use,
-					y=y_to_use,
-					r=0+max_r_to_use,
+					pos={
+						x=x_to_use,
+						y=y_to_use
+					},
+					dim={
+						r=0+max_r_to_use
+					},
 					speed=rnd(1),
 					curr_life=0,
 					lifetime=life_to_use,
-					clr=clr_to_use
+					clr=self.part_config.clr
 				})
 			)
 	end
@@ -1243,6 +1263,12 @@ part=obj:new({
 	lifetime=100,
 	clr=1,
 	
+	update=function(self)
+		--self.pos.y-=
+		--	self.speed
+		self.curr_life+=1
+	end,
+	
 	draw=function(self)
 		circ(
 			self.pos.x,
@@ -1250,6 +1276,15 @@ part=obj:new({
 			self.dim.r, 
 			self.clr)
 	end
+})
+
+
+test_emit=part_emit:new({
+	pos={
+		x=0,
+		y=0
+	},
+	active=true
 })
 -->8
 -- enemies
