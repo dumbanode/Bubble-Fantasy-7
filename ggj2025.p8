@@ -851,25 +851,7 @@ end
 -->8
 --game state
 
-
-function init_game_over()
-	cls(4)
-	print(
-		"you died sorry",
-		30,
-		54
-	)
-	score = get_elapsed()
-	print("score: "..flr(score)..
-	"cm")
-	print("gold: "..num_coins)
-	print("press ❎ to restart")
-	sfx(1)
-end
-
 -- update 
-
-
 function update_game_over()
 	btn_update()
 	if btnu(4) or btnu(5) then
@@ -1004,7 +986,35 @@ game=state:new({
 
 state_mngr:add(game)
 
+game_over=state:new({
+	name="game_over",
+	
+	init=function(self)
+			self.score=get_elapsed()
+			sfx(1)
+	end,
+	
+	update=function(self)
+		if btnu(4) or btnu(5) then
+			transition_to_state(states.title)
+		end
+	end,
+	
+	draw=function(self)
+		cls(4)
+		print(
+			"you died sorry",
+			30,
+			54
+		)
+		print("score: "..flr(score)..
+		"cm")
+		print("gold: "..num_coins)
+		print("press ❎ to restart")
+	end
+})
 
+state_mngr:add(game_over)
 -->8
 --particles
 num_parts=15
@@ -1291,8 +1301,10 @@ function update_enemies()
 	-- spawn more enemies
 	spawn_enemies()
 	if check_enemy_col() then
-		transition_to_state(states.game_over)
-	end
+		state_mngr:transition_to_state(
+			"game_over"
+		)
+		end
 end
 
 function check_enemy_col()
