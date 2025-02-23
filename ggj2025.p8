@@ -925,7 +925,7 @@ title=state:new({
 		cls()
 		print(
 			"bubble fantasy 7",
-			32,80
+			32,80,7
 		)
 		print("    press ❎")
 		
@@ -1181,8 +1181,8 @@ part_emit=obj:new({
 		y=0
 	},
 	dim={
-		w=20,
-		h=20
+		w=100,
+		h=100
 	},
 	active=false,
 	parts={},
@@ -1190,17 +1190,30 @@ part_emit=obj:new({
 	
 	part_config={
 		clr=7,
-		life={100,400},
+		life={10,30},
 		r={1,4}
 	},
 	
 	update=function(self)
+		-- spawn particles
 		if self.active then
-			self:spawn_particles()
+			for i=1,500 do
+				self:spawn_particles()
+			end
 		end
 		
+		-- update each particle
+		to_remove={}
 		for part in all(self.parts) do
 			part:update()
+			if part:check_remove() then
+				add(to_remove, part)
+			end
+		end
+		
+		-- remove particles
+		for part in all(to_remove) do
+			del(self.parts, part)
 		end
 	end,
 	
@@ -1243,7 +1256,7 @@ part_emit=obj:new({
 					dim={
 						r=r_to_use
 					},
-					speed=rnd(1),
+					speed=rnd(5),
 					curr_life=0,
 					lifetime=life_to_use,
 					clr=self.part_config.clr
@@ -1264,9 +1277,41 @@ part=obj:new({
 	clr=1,
 	
 	update=function(self)
-		--self.pos.y-=
-		--	self.speed
+		-- update current life
 		self.curr_life+=1
+		
+		-- move up
+		self.pos.y-=
+			self.speed
+		
+		-- check if should remove
+		result=self:check_remove()
+		if result then
+			
+		end
+	end,
+	
+	max_bound=138,
+	min_bound=-10,
+	check_remove=function(self)
+		-- check y pos
+		if self.pos.y>self.max_bound
+			or self.pos.y<self.min_bound do
+			return true
+			
+		-- check x pos
+		elseif self.pos.x>self.max_bound
+			or self.pos.x<self.min_bound do
+			return true
+		
+		
+		-- check lifetime
+		elseif self.curr_life>self.lifetime do
+			return true
+		end
+		
+		-- shouldnt remove
+		return false
 	end,
 	
 	draw=function(self)
@@ -1282,7 +1327,7 @@ part=obj:new({
 test_emit=part_emit:new({
 	pos={
 		x=10,
-		y=10
+		y=128
 	},
 	active=true
 })
