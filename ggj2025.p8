@@ -1181,23 +1181,23 @@ part_emit=obj:new({
 		y=0
 	},
 	dim={
-		w=100,
-		h=100
+		w=10,
+		h=10,
 	},
 	active=false,
+	one_shot=false,
 	parts={},
-	max_parts=10,
-	
+	r={1,4},
+	clr=7,
+	life={10,30},
 	part_config={
-		clr=7,
-		life={10,30},
-		r={1,4}
+		max_parts=500
 	},
 	
 	update=function(self)
 		-- spawn particles
 		if self.active then
-			for i=1,500 do
+			for i=1,50 do
 				self:spawn_particles()
 			end
 		end
@@ -1239,12 +1239,12 @@ part_emit=obj:new({
 			+rnd(self.dim.h)
 		
 		-- calculate lifetime
-		life_to_use=self.part_config.life[1]
-			+rnd(self.part_config.life[2])
+		life_to_use=self.life[1]
+			+rnd(self.life[2])
 		
 		-- calculate radius
-		r_to_use=self.part_config.r[1]
-			+rnd(self.part_config.r[2])
+		r_to_use=self.r[1]
+			+rnd(self.r[2])
 
 		add(
 				self.parts,
@@ -1259,7 +1259,7 @@ part_emit=obj:new({
 					speed=rnd(5),
 					curr_life=0,
 					lifetime=life_to_use,
-					clr=self.part_config.clr
+					clr=self.clr
 				})
 			)
 	end
@@ -1315,7 +1315,7 @@ part=obj:new({
 	end,
 	
 	draw=function(self)
-		circ(
+		circfill(
 			self.pos.x,
 			self.pos.y,
 			self.dim.r, 
@@ -1326,9 +1326,16 @@ part=obj:new({
 
 test_emit=part_emit:new({
 	pos={
-		x=10,
+		x=0,
 		y=128
 	},
+	dim={
+		w=128,
+		h=100,
+	},
+	r={6,10},
+	life={10,100},
+	clr=7,
 	active=true
 })
 -->8
