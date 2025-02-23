@@ -679,22 +679,6 @@ function draw_title()
 	
 end
 
-function draw_game()
-	cls(1)
-	world:draw()
-	world:draw_hud()
-	
-	-- update the player sprite
-	if plr.spr_timer>10 then
-		plr.spr_timer=0
-	else
-		plr.spr_timer+=1
-	end
-	
-	plr:draw()
-	--debug_print()
-end
-
 function draw_game_over()
 end
 
@@ -867,18 +851,6 @@ end
 -->8
 --game state
 
-function init_game()
-	dist_traveled={
-		m=0,
-		t=0
-	}
-	world:init()
-	init_plr()
-	num_coins=0
-	setup_particles()
-	world:
-	init_floor()
-end
 
 function init_game_over()
 	cls(4)
@@ -896,12 +868,7 @@ function init_game_over()
 end
 
 -- update 
-function update_game()
-	world:update()
-	update_hud()
-	plr:update()
-	update_timer()
-end
+
 
 function update_game_over()
 	btn_update()
@@ -961,7 +928,7 @@ state_mngr={
 
 
 -------------------------------
-
+-- state declarations --
 
 
 title=state:new({
@@ -969,7 +936,7 @@ title=state:new({
 	
 	update=function(self)
 		if btnu(4) or btnu(5) then
-			state_mngr.transition_to_state(
+			state_mngr:transition_to_state(
 				"game"
 			)
 		end
@@ -993,6 +960,51 @@ title=state:new({
 })
 
 state_mngr:add(title)
+
+game=state:new({
+	name="game",
+	
+	init=function(self)
+		dist_traveled={
+			m=0,
+			t=0
+		}
+		world:init()
+		init_plr()
+		num_coins=0
+		setup_particles()
+		world:
+		init_floor()
+	end,
+	
+	update=function(self)
+		world:update()
+		update_hud()
+		plr:update()
+		update_timer()
+	end,
+	
+	draw=function(self)
+		cls(1)
+		world:draw()
+		world:draw_hud()
+		
+		-- update the player sprite
+		if plr.spr_timer>10 then
+			plr.spr_timer=0
+		else
+			plr.spr_timer+=1
+		end
+		
+		plr:draw()
+		--debug_print()
+	end
+	
+})
+
+state_mngr:add(game)
+
+
 -->8
 --particles
 num_parts=15
