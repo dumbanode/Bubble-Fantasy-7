@@ -1004,7 +1004,7 @@ game_over=state:new({
 	update=function(self)
 		if btnu(4) or btnu(5) then
 			state_mngr:transition_to_state(
-				"game")
+				"title")
 		end
 	end,
 	
@@ -1198,7 +1198,7 @@ part_emit=obj:new({
 	one_shot=false,
 	parts={},
 	r={1,4},
-	clr=7,
+	clr=12,
 	life={10,30},
 	part_config={
 		max_parts=500
@@ -1282,7 +1282,7 @@ part_emit=obj:new({
 			/self.one_shot_timeout
 			
 		r_to_use=r_to_use*perc
-		r_to_use=max(4,r_to_use)
+		r_to_use=max(4.5,r_to_use)
 
 		add(
 				self.parts,
@@ -1354,10 +1354,16 @@ part=obj:new({
 	
 	draw=function(self)
 		circfill(
+   self.pos.x,
+   self.pos.y,
+   self.dim.r + 2,
+   1
+  )
+		circfill(
 			self.pos.x,
 			self.pos.y,
 			self.dim.r, 
-			self.clr)
+			12)
 	end
 })
 
@@ -1375,7 +1381,7 @@ trans_emit=part_emit:new({
 	life={10,60},
 	clr=7,
 	one_shot=true,
-	parts_per_frame=150,
+	parts_per_frame=125,
 	one_shot_timeout=25,
 })
 
