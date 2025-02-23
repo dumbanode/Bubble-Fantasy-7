@@ -1211,10 +1211,10 @@ part_emit=obj:new({
 	end,
 	
 	spawn_particles=function(self)
-		while count(self.parts)
-			<self.max_parts do
+		--while count(self.parts)
+		--	<self.max_parts do
 			spawn_particle()
-		end
+		--end
 	end,
 	
 	spawn_particle=function(self)
@@ -1232,7 +1232,7 @@ part_emit=obj:new({
 		-- calculate radius
 		r_to_use=self.part_config.r[0]
 			+rnd(self.part_config.r[1])
-		
+
 		add(
 				self.parts,
 				part:new({
