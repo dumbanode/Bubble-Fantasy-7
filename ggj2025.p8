@@ -1166,6 +1166,91 @@ function spawn_dash_particles()
 		has_dash_parts_spawn=false
 	end
 end
+
+-------------
+
+part_emit=obj:new({
+	pos={
+		x=0,
+		y=0
+	},
+	dim={
+		w=4,
+		h=4
+	},
+	active=false,
+	parts={},
+	max_parts=10,
+	
+	part_config={
+		clr=7,
+		life={100,400},
+		r={1,4}
+	},
+	
+	update=function(self)
+		if self.active then
+			self:spawn_particles()
+		end
+	end,
+	
+	spawn_particles=function(self)
+		while count(self.parts)
+			<self.max_parts do
+			spawn_particle()
+		end
+	end,
+	
+	spawn_particle=function(self)
+		-- calculate position
+		x_to_use=self.pos.x
+			+rnd(self.dim.w)
+	
+		y_to_use=self.pos.y
+			+rnd(self.dim.h)
+		
+		-- calculate lifetime
+		life_to_use=self.part_config.life[0]
+			+rnd(self.part_config.life[1])
+		
+		
+		r_to_use=self.part_config.r[0]
+			+rnd(self.part_config.r[1])
+		
+		add(
+				self.parts,
+				part:new({
+					x=x_to_use,
+					y=y_to_use,
+					r=0+max_r_to_use,
+					speed=rnd(1),
+					curr_life=0,
+					lifetime=life_to_use,
+					clr=clr_to_use
+				})
+			)
+	end
+})
+
+part=obj:new({
+	dim={
+		w=0,
+		h=0,
+		r=0
+	},
+	speed=rnd(1),
+	curr_life=0,
+	lifetime=100,
+	clr=1,
+	
+	draw=function(self)
+		circ(
+			self.pos.x,
+			self.pos.y,
+			self.dim.r, 
+			self.clr)
+	end
+})
 -->8
 -- enemies
 -- enemy declarations
