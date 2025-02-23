@@ -95,6 +95,13 @@ world={
 	end,
 	
 	draw_env=function(self)
+		fillp(░)
+		rectfill(
+			0,0,
+			128,10,
+			13
+		)
+		fillp()
 		self:draw_floor()
 		rectfill(
 			0,0,
@@ -1364,6 +1371,11 @@ part=obj:new({
 			self.pos.y,
 			self.dim.r, 
 			12)
+		circfill(
+			self.pos.x+self.dim.r/3,
+			self.pos.y-self.dim.r/2,
+			2, 7
+		)
 	end
 })
 
