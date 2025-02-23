@@ -8,7 +8,17 @@ imp_amount=2.5
 max_imp=10
 
 function _init()
-	transition_to_state(states.title)
+	state_mngr:transition_to_state(
+		"title")
+end
+
+function _update()
+	btn_update()
+	state_mngr:update()
+end
+
+function _draw()
+	state_mngr:draw()
 end
 
 world={
@@ -655,7 +665,7 @@ equip_lvl={
 
 -->8
 -- draw
-function _draw()
+function _draw_bak()
 	if curr_state==states.title then
 		draw_title()
 	elseif curr_state==states.game then
@@ -666,19 +676,7 @@ function _draw()
 end
 
 function draw_title()
-	cls()
-	print(
-		"bubble fantasy 7",
-		32,80
-	)
-	print("    press ❎")
 	
-	print(
-		"created by: cameron smith",
-		15,110
-	)
-	print("  global game jam 2025")
-	map()
 end
 
 function draw_game()
@@ -874,7 +872,7 @@ states={
 	game_over=3
 }
 
-function transition_to_state(state)
+function transition_to_state_bak(state)
 	if state==states.title then
 		init_title()
 		curr_state=states.title
@@ -899,7 +897,8 @@ function init_game()
 	init_plr()
 	num_coins=0
 	setup_particles()
-	world:init_floor()
+	world:
+	init_floor()
 end
 
 function init_game_over()
@@ -917,15 +916,16 @@ function init_game_over()
 	sfx(1)
 end
 
-function _update()
+function _update_bak()
 	btn_update()
+	--[[
 	if curr_state==states.game then
 		update_game()
 	elseif curr_state==states.title then
 		update_title()
 	elseif curr_state==states.game_over then
 		update_game_over()
-	end
+	end]]
 end
 
 -- update 
@@ -937,9 +937,7 @@ function update_game()
 end
 
 function update_title()
-	if btnu(4) or btnu(5) then
-		transition_to_state(states.game)
-	end
+
 end
 
 function update_game_over()
@@ -949,7 +947,79 @@ function update_game_over()
 	end
 end
 
+----------------------
+state={
+	name="",
+	
+	new=function(self,tbl)
+		tbl=tbl or {}
+		setmetatable(tbl,{
+			__index=self
+		})
+		return tbl
+	end,
+	
+	init=function(self)
+	end,
+	
+	update=function(self)
+	end,
+	
+	draw=function(self)
+	end
+}
 
+state_mngr={
+	curr_state=-1,
+	states={
+		title=state:new({
+			name="title",
+			
+			update=function(self)
+				if btnu(4) or btnu(5) then
+					state_mngr.transition_to_state(
+						"game"
+					)
+				end
+			end,
+			
+			draw=function(self)
+				cls()
+				print(
+					"bubble fantasy 7",
+					32,80
+				)
+				print("    press ❎")
+				
+				print(
+					"created by: cameron smith",
+					15,110
+				)
+				print("  global game jam 2025")
+				map()
+			end
+			
+		})
+	},
+	
+	transition_to_state=function(
+		self, name_of_state)
+		-- set the current state
+		print(self.curr_state)
+		self.curr_state=
+			self.states[name_of_state]
+		-- initialize the state
+		self.curr_state:init()
+	end,
+	
+	update=function(self)
+		self.curr_state:update()
+	end,
+
+	draw=function(self)
+		self.curr_state:draw()
+	end	
+}
 -->8
 --particles
 num_parts=15
