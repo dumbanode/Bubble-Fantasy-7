@@ -851,15 +851,6 @@ end
 -->8
 --game state
 
--- update 
-function update_game_over()
-	btn_update()
-	if btnu(4) or btnu(5) then
-		transition_to_state(states.title)
-	end
-end
-
-----------------------
 state={
 	name="",
 	
@@ -996,7 +987,8 @@ game_over=state:new({
 	
 	update=function(self)
 		if btnu(4) or btnu(5) then
-			transition_to_state(states.title)
+			state_mngr:transition_to_state(
+				"game")
 		end
 	end,
 	
