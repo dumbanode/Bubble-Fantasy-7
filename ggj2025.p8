@@ -51,6 +51,16 @@ world={
 				w=140,
 				h=140,
 			},
+			part_config={
+				max_parts=10,
+				init_amount=10
+			},
+			part_to_use=part:new({
+				speed=0+rnd(5),
+				update_move=function(self)
+					self.pos.y-=self.speed*world.speed
+				end,
+			}),
 			r={0,3},
 			life={100,1000},
 			clr=13,
@@ -59,7 +69,7 @@ world={
 			speed={0,.2},
 			parts={}
 		})
-		
+		self.b_parts_emit:init()
 		init_coins()
 		init_shops()
 		init_enemies()
@@ -104,12 +114,12 @@ world={
 	end,
 	
 	draw=function(self)
+		self.b_parts_emit:draw()
 		draw_enemies()
 		self:draw_env()
 		draw_hud_upgrades()
 		draw_coins()
 		draw_shops()
-		self.b_parts_emit:draw()
 		
 		debug_print()
 	end,
@@ -1233,14 +1243,12 @@ part=obj:new({
 		self.curr_life+=1
 		
 		-- move up
-		self.pos.y-=
-			self.speed
+		self:update_move()
 		
-		-- check if should remove
-		result=self:check_remove()
-		if result then
-			
-		end
+	end,
+	
+	update_move=function(self)
+		self.pos.y-=self.speed
 	end,
 	
 	max_bound=138,
@@ -1295,11 +1303,19 @@ part_emit=obj:new({
 	part_to_use=part,
 	part_config={
 		max_parts=500,
+		init_amount=15
 	},
 	
 	curr_time=0,
 	one_shot_timeout=15,
 	taper=false,
+	
+	init=function(self)
+		amount=self.part_config.init_amount
+		for i=0,amount do
+			self:spawn_particle()
+		end
+	end,
 	
 	set_active=function(self, val)
 		if val then
@@ -1348,11 +1364,12 @@ part_emit=obj:new({
 	
 	parts_per_frame=100,
 	spawn_particles=function(self)
-		--while count(self.parts)
-		--	<self.max_parts do
-		for i=1,self.parts_per_frame
-		 do
-			self:spawn_particle()
+		
+		max_amount=self.part_config.max_parts
+		if count(self.parts)<max_amount do
+			for i=1,self.parts_per_frame do
+				self:spawn_particle()
+			end
 		end
 	end,
 	
