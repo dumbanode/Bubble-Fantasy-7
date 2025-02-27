@@ -41,6 +41,25 @@ world={
 	
 	
 	init=function(self)
+		-- init background particles
+		self.b_parts_emit=part_emit:new({
+			pos={
+				x=0,
+				y=0
+			},
+			dim={
+				w=140,
+				h=140,
+			},
+			r={0,3},
+			life={100,1000},
+			clr=13,
+			parts_per_frame=1,
+			active=true,
+			speed={0,.2},
+			parts={}
+		})
+		
 		init_coins()
 		init_shops()
 		init_enemies()
@@ -49,9 +68,9 @@ world={
 		
 	update=function(self)
 		self:update_field()
-		update_particles()
 		self:update_floor()
 		update_enemies()
+		self.b_parts_emit:update()
 		--update_coins()
 		--update_shops()
 	end,
@@ -86,11 +105,12 @@ world={
 	
 	draw=function(self)
 		draw_enemies()
-		draw_particles()
 		self:draw_env()
 		draw_hud_upgrades()
 		draw_coins()
 		draw_shops()
+		self.b_parts_emit:draw()
+		
 		debug_print()
 	end,
 	
@@ -271,7 +291,9 @@ function debug_print()
 		7
 	)
 	print(
-		count(trans_emit.parts),
+		count(
+					world.b_parts_emit.parts
+		),
 		7
 	)
 end
@@ -968,7 +990,7 @@ game=state:new({
 		world:init()
 		init_plr()
 		num_coins=0
-		setup_particles()
+		--setup_particles()
 		world:
 		init_floor()
 	end,
@@ -1036,7 +1058,9 @@ num_parts=15
 part_clr=5
 dash_clr=12
 
-function setup_particles()
+
+
+function setup_particles_b()
 	parts={}
 	dash_parts={}
 	
@@ -1192,6 +1216,66 @@ end
 
 -------------
 
+
+part=obj:new({
+	dim={
+		w=0,
+		h=0,
+		r=0
+	},
+	speed=rnd(1),
+	curr_life=0,
+	lifetime=100,
+	clr=1,
+	
+	update=function(self)
+		-- update current life
+		self.curr_life+=1
+		
+		-- move up
+		self.pos.y-=
+			self.speed
+		
+		-- check if should remove
+		result=self:check_remove()
+		if result then
+			
+		end
+	end,
+	
+	max_bound=138,
+	min_bound=-10,
+	check_remove=function(self)
+		-- check y pos
+		if self.pos.y>self.max_bound
+			or self.pos.y<self.min_bound do
+			return true
+			
+		-- check x pos
+		elseif self.pos.x>self.max_bound
+			or self.pos.x<self.min_bound do
+			return true
+		
+		
+		-- check lifetime
+		elseif self.curr_life>self.lifetime do
+			return true
+		end
+		
+		-- shouldnt remove
+		return false
+	end,
+	
+	draw=function(self)
+		circ(
+			self.pos.x,
+			self.pos.y,
+			self.dim.r, 
+			self.clr)
+	end
+})
+
+
 part_emit=obj:new({
 	pos={
 		x=0,
@@ -1201,18 +1285,21 @@ part_emit=obj:new({
 		w=10,
 		h=10,
 	},
+	speed={2,6},
 	active=false,
 	one_shot=false,
 	parts={},
 	r={1,4},
 	clr=12,
 	life={10,30},
+	part_to_use=part,
 	part_config={
-		max_parts=500
+		max_parts=500,
 	},
 	
 	curr_time=0,
 	one_shot_timeout=15,
+	taper=false,
 	
 	set_active=function(self, val)
 		if val then
@@ -1287,13 +1374,19 @@ part_emit=obj:new({
 			
 		perc=self.curr_time
 			/self.one_shot_timeout
-			
-		r_to_use=r_to_use*perc
-		r_to_use=max(4.5,r_to_use)
+		
+		if self.taper	then
+			r_to_use=r_to_use*perc
+			r_to_use=max(4.5,r_to_use)
+		end
+		
+		--calculate speed
+		speed_to_use=self.speed[1]
+			+rnd(self.speed[2])
 
 		add(
 				self.parts,
-				part:new({
+				self.part_to_use:new({
 					pos={
 						x=x_to_use,
 						y=y_to_use
@@ -1301,7 +1394,7 @@ part_emit=obj:new({
 					dim={
 						r=r_to_use
 					},
-					speed=2+rnd(6),
+					speed=speed_to_use,
 					curr_life=0,
 					lifetime=life_to_use,
 					clr=self.clr
@@ -1310,7 +1403,8 @@ part_emit=obj:new({
 	end
 })
 
-part=obj:new({
+---------------------
+bubble_part=obj:new({
 	dim={
 		w=0,
 		h=0,
@@ -1379,7 +1473,6 @@ part=obj:new({
 	end
 })
 
-
 trans_emit=part_emit:new({
 	pos={
 		x=0,
@@ -1395,8 +1488,9 @@ trans_emit=part_emit:new({
 	one_shot=true,
 	parts_per_frame=125,
 	one_shot_timeout=25,
+	part_to_use=bubble_part,
+	taper=true
 })
-
 -->8
 -- enemies
 -- enemy declarations
