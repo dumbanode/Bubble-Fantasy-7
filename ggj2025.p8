@@ -735,22 +735,9 @@ equip_lvl={
 
 -->8
 -- draw
-function _draw_bak()
-	if curr_state==states.title then
-		draw_title()
-	elseif curr_state==states.game then
-		draw_game()
-	elseif curr_state==states.game_over then
-		draw_game_over()
-	end
-end
 
-function draw_title()
-	
-end
-
-function draw_game_over()
-end
+-- create a base class
+-- for all pickupables
 
 -- spawn powerups and coins
 coins={}
@@ -1088,158 +1075,8 @@ game_over=state:new({
 state_mngr:add(game_over)
 -->8
 --particles
-num_parts=15
-part_clr=5
-dash_clr=12
 
-function spawn_particle(
-	init, x, y, table, clr, life,
-	max_r
-)
-	clr_to_use=part_clr
-	if clr!=nil then
-		clr_to_use=clr
-	end
-
-	table_to_use=parts
-	if table!=nil then
-		table_to_use=table
-	end
-
-	x_to_use=18+rnd(89)
-	if x!=nil then
-		x_to_use=x
-	end
-
-	y_to_use=-10
-	if y!=nil then
-		y_to_use=y
-	elseif init!=nil then
-		y_to_use=-10 + rnd(128)
-	end
-	
-	life_to_use=100+rnd(400)
-	if life!=nil then
-		life_to_use=life
-	end
-	
-	max_r_to_use=rnd(4)
-	if max_r!=nil then
-		max_r_to_use=max_r
-	end
-	
-	add(
-			table_to_use,
-			{
-				x=x_to_use,
-				y=y_to_use,
-				r=0+max_r_to_use,
-				speed=rnd(1),
-				curr_life=0,
-				lifetime=life_to_use,
-				clr=clr_to_use
-			}
-		)
-end
-
-dash_move_speed=2
-function update_one_dash_part(p)
-	p.y-=p.speed*dash_move_speed
-	p.curr_life+=1
-	if p.curr_life>p.lifetime then
-		return false
-	end
-	return true
-end
-
-function update_one_bg_part(p)
-	p.y+=p.speed*world.speed
-	p.curr_life+=1
-	if p.curr_life>p.lifetime then
-		return false
-	end
-	return true
-end
-
-function update_particles()
-	-- update the pos of all parts
-	local to_remove = {}
-	
-	-- update bg parts
-	for p in all(parts) do
-		result=update_one_bg_part(p)
-		if not result then
-			add(to_remove,p)
-		end
-	end
-	
-	-- despawn any bg particles
-	for p in all(to_remove) do
-		del(parts, p)
-	end
-	
-	-- update dash parts
-	to_remove={}
-	for p in all(dash_parts) do
-		result=update_one_dash_part(p)
-		if not result then
-			add(to_remove,p)
-		end
-	end
-	
-	-- despawn any dash particles
-	for p in all(to_remove) do
-		del(dash_parts, p)
-	end
-	
-	--spawn new particles
-	while count(parts)<num_parts do
-		spawn_particle()
-	end
-	
-	--spawn dash particles
-	spawn_dash_particles()
-end
-
-function draw_particles()
-	-- draw bg particles
-	for p in all(parts) do
-		circ(p.x,p.y,p.r, p.clr)
-	end
-	
-	-- draw dash particles
-	for p in all(dash_parts) do
-		circ(p.x,p.y,p.r, p.clr)
-	end
-end
-
-dash_parts={}
-max_dash_parts=1
-has_dash_parts_spawn=false
-function spawn_dash_particles()
-	if plr.dashing==1 then
-		if not has_dash_parts_spawn then
-			for i=0,5 do
-				spawn_particle(
-					false,
-					plr.pos.x+(-3+rnd(6)),
-					plr.pos.y+2,
-					dash_parts,
-					dash_clr,
-					nil,
-					2
-				)
-			end
-			has_dash_parts_spawn=true
-		end
-	else
-		has_dash_parts_spawn=false
-	end
-end
-
--------------
-
-
+-- single particle
 part=obj:new({
 	dim={
 		w=0,
@@ -1298,7 +1135,7 @@ part=obj:new({
 	end
 })
 
-
+-- particle emitter
 part_emit=obj:new({
 	pos={
 		x=0,
@@ -1437,6 +1274,9 @@ part_emit=obj:new({
 })
 
 ---------------------
+-- custom particles
+
+-- bubble particle
 bubble_part=part:new({
 	dim={
 		w=0,
@@ -1506,6 +1346,9 @@ bubble_part=part:new({
 	end
 })
 
+-- custom emitters
+
+-- transition emitter
 trans_emit=part_emit:new({
 	pos={
 		x=0,
