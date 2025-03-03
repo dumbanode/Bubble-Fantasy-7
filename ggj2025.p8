@@ -1068,17 +1068,6 @@ num_parts=15
 part_clr=5
 dash_clr=12
 
-
-
-function setup_particles_b()
-	parts={}
-	dash_parts={}
-	
-	for i=0,num_parts do
-		spawn_particle(true)
-	end
-end
-
 function spawn_particle(
 	init, x, y, table, clr, life,
 	max_r
@@ -1237,6 +1226,7 @@ part=obj:new({
 	curr_life=0,
 	lifetime=100,
 	clr=1,
+	gravity=1,
 	
 	update=function(self)
 		-- update current life
@@ -1248,7 +1238,8 @@ part=obj:new({
 	end,
 	
 	update_move=function(self)
-		self.pos.y-=self.speed
+		self.pos.y+=
+			(self.speed*self.gravity)
 	end,
 	
 	max_bound=138,
@@ -1309,6 +1300,7 @@ part_emit=obj:new({
 	curr_time=0,
 	one_shot_timeout=15,
 	taper=false,
+	gravity=1,
 	
 	init=function(self)
 		amount=self.part_config.init_amount
@@ -1421,7 +1413,7 @@ part_emit=obj:new({
 })
 
 ---------------------
-bubble_part=obj:new({
+bubble_part=part:new({
 	dim={
 		w=0,
 		h=0,
@@ -1431,14 +1423,16 @@ bubble_part=obj:new({
 	curr_life=0,
 	lifetime=100,
 	clr=1,
+	gravity=-1,
 	
 	update=function(self)
 		-- update current life
 		self.curr_life+=1
 		
 		-- move up
-		self.pos.y-=
-			self.speed
+		--self.pos.y-=
+			--self.speed
+		self:update_move()
 		
 		-- check if should remove
 		result=self:check_remove()
@@ -1506,7 +1500,8 @@ trans_emit=part_emit:new({
 	parts_per_frame=125,
 	one_shot_timeout=25,
 	part_to_use=bubble_part,
-	taper=true
+	taper=true,
+	gravity=-1
 })
 -->8
 -- enemies
