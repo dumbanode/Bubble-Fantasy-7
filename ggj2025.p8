@@ -30,7 +30,6 @@ world={
 		max_y=119,
 		min_y=0
 		},
-		
 	trans={
 		max_x=-1,
 		min_x=-1,
@@ -38,6 +37,8 @@ world={
 	},
 	speed=.1,
 	bk_clr=0,
+	gravity=1,
+	traveled=0,
 	
 	
 	init=function(self)
@@ -58,7 +59,7 @@ world={
 			part_to_use=part:new({
 				speed=0+rnd(5),
 				update_move=function(self)
-					self.pos.y-=self.speed*world.speed
+					self.pos.y+=self.speed*world.speed
 				end,
 			}),
 			r={0,3},
@@ -81,8 +82,17 @@ world={
 		self:update_floor()
 		update_enemies()
 		self.b_parts_emit:update()
+		self:update_distance()
 		--update_coins()
 		--update_shops()
+	end,
+	
+	travel_num=1,
+	update_distance=function(self)
+		self.traveled=
+			flr(
+				time()*self.speed
+			)
 	end,
 	
 	update_field=function(self)
@@ -120,8 +130,7 @@ world={
 		draw_hud_upgrades()
 		draw_coins()
 		draw_shops()
-		
-		debug_print()
+		self:draw_hud()
 	end,
 	
 	draw_env=function(self)
@@ -186,7 +195,23 @@ world={
 	end,
 	
 	draw_hud=function(self)
+		self:draw_distance()
+		self:draw_coin_display()
 		self:draw_tut_text()
+		self:draw_distance()
+	end,
+	
+	draw_distance=function(self)
+		print(
+			self.traveled,0,15,7
+		)
+	end,
+	
+	draw_coin_display=function(self)
+		spr(20,0,25)
+		print(
+			plr.status.coin_collected,
+			10,27,7)
 	end,
 	
 	draw_tut_text=function(self)
@@ -1015,7 +1040,6 @@ game=state:new({
 	draw=function(self)
 		cls(1)
 		world:draw()
-		world:draw_hud()
 		
 		-- update the player sprite
 		if plr.spr_timer>10 then
@@ -1025,7 +1049,7 @@ game=state:new({
 		end
 		
 		plr:draw()
-		debug_print()
+		--debug_print()
 	end
 	
 })
@@ -1430,8 +1454,6 @@ bubble_part=part:new({
 		self.curr_life+=1
 		
 		-- move up
-		--self.pos.y-=
-			--self.speed
 		self:update_move()
 		
 		-- check if should remove
