@@ -800,8 +800,13 @@ equip_lvl={
 -- on_collision()
 
 -- spawn powerups and coins
-coins={}
 max_num_coins=20
+
+collidable=obj:new({
+	on_collide=function(self)
+	
+	end
+})
 
 coin=obj:new({
 	update=function(self)
