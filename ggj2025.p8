@@ -39,6 +39,7 @@ world={
 	bk_clr=0,
 	gravity=1,
 	traveled=0,
+	coins={},
 	
 	
 	init=function(self)
@@ -70,8 +71,8 @@ world={
 			speed={0,.2},
 			parts={}
 		})
+		coins={}
 		self.b_parts_emit:init()
-		init_coins()
 		init_shops()
 		init_enemies()
 		self:init_floor()
@@ -83,16 +84,67 @@ world={
 		update_enemies()
 		self.b_parts_emit:update()
 		self:update_distance()
-		--update_coins()
+		self:update_coins()
 		--update_shops()
+	end,
+	
+	update_coins=function(self)
+		-- check if the plr
+		-- collected coins
+		collected={}
+		for c in all(self.coins) do
+			if check_col(c, plr) then
+				add(collected, c)
+			end
+		end
+		
+		-- process each collected
+		for c in all(collected) do
+			del(self.coins,c)
+			sfx(5)
+			plr.status.coins+=1
+		end
+		
+	
+		-- move the coins down
+		for c in all(self.coins) do
+			result=c:update()
+			if not result then
+				del(self.coins,c)
+			end
+	 end
+
+	 if time()%10 == 0 then
+	 	self:spawn_coins()
+	 end
+	end,
+	
+	spawn_coins=function(self)
+		--rand generate amount of coins
+		num_to_spawn = rnd(5)
+		
+		if count(self.coins)<max_num_coins then 
+			for i=0,num_to_spawn do
+				self:spawn_coin()
+			end
+		end
+	end,
+	
+	spawn_coin=function(self)
+		add(
+			self.coins,
+			coin:new({
+				pos={
+					x=18+rnd(90),
+					y=-10-rnd(120),
+				}
+			})
+		)
 	end,
 	
 	travel_num=1,
 	update_distance=function(self)
-		self.traveled=
-			flr(
-				time()*self.speed
-			)
+		self.traveled=flr(time())
 	end,
 	
 	update_field=function(self)
@@ -128,9 +180,15 @@ world={
 		draw_enemies()
 		self:draw_env()
 		draw_hud_upgrades()
-		draw_coins()
+		self:draw_coins()
 		draw_shops()
 		self:draw_hud()
+	end,
+	
+	draw_coins=function(self)
+		for c in all(self.coins) do
+			c:draw()
+		end
 	end,
 	
 	draw_env=function(self)
@@ -210,7 +268,7 @@ world={
 	draw_coin_display=function(self)
 		spr(20,0,25)
 		print(
-			plr.status.coin_collected,
+			plr.status.coins,
 			10,27,7)
 	end,
 	
@@ -395,7 +453,7 @@ default_plr=obj:new({
 		status={
 			is_big=false,
 			level=6,
-			coin_collected=0,
+			coins=0,
 			dashing=0
 		},
 		sprites={
@@ -734,82 +792,34 @@ equip_lvl={
 
 
 -->8
--- draw
+-- pickupable
 
 -- create a base class
 -- for all pickupables
 
+-- on_collision()
+
 -- spawn powerups and coins
 coins={}
-max_num_coins=5
+max_num_coins=20
 
-function init_coins()
-	coins={}
-end
-
-function spawn_coins()
-	num_to_get=flr(rnd(50))
-	chance=flr(rnd(50))
+coin=obj:new({
+	update=function(self)
+		self.pos.y+=world.speed
+	 if self.pos.y>130 then
+	 	return false
+	 end
+	 return true
+	end,
 	
-	if count(coins)<max_num_coins 
-		and chance==num_to_get then
-		spawn_coin()
-	end
-end
-
-function spawn_coin()
-	add(
-		coins,
-		{
-			x=18+rnd(90),
-			y=-10,
-			w=8,
-			h=8
-		}
-	)
-end
-
-function draw_coins()
-	for c in all(coins) do
+	draw=function(self)
 		spr(
 			20,
-			c.x,
-			c.y
+			self.pos.x,
+			self.pos.y
 		)
-	end
-end
-
-function update_coins()
-	--for c in all(coins) do
-	--	c.y+=world_speed
-	--	if c.y>130 then
-	--		del(coins, c)
-	--	end
-	--end
-	--check_coin_collision()
-	--spawn_coins()
-end
-
-function check_coin_collision()
-	collected={}
-	-- determine any collisions
-	for c in all(coins) do
-		if plr.x < c.x + c.w and
-	   plr.x + plr.w > c.x and
-	   plr.y < c.y + c.h and
-	   plr.y + plr.h > c.y then
-	   add(collected, c)
-	  end
-	end
-	
-	-- process each collected
-	for c in all(collected) do
-		del(coins,c)
-		sfx(5)
-		num_coins+=1
-	end
-	
-end
+		end
+})
 
 
 function draw_hud_upgrades()
@@ -1560,19 +1570,6 @@ function spawn_jelly_fish()
 		)
 end
 
-function spawn_fish_bak()
-	num_to_get=flr(rnd(50))
-	chance=flr(rnd(50))
-	
-	if count(curr_enemies)<curr_num_fish 
-		and chance==num_to_get then
-		add(
-			curr_enemies,
-			fish:new()
-		)
-		num_to_get=flr(rnd(50))
-	end
-end
 -->8
 --impulse management
 impulse_manager={
@@ -1830,7 +1827,7 @@ __sfx__
 00010000000001e65022650266502865028650276502565023650206501a650156501265012650136501465022750166501765018650186501a6501b6501d6501e6501d6501b6501865018650196501b6501c650
 00020000097700c7700f7701077011770137701477016770177701877017770167701577014770137701277011770107700f7700d7700b7700977008770077700777006770067700677007770077700007000070
 000700000000023350283502a3502c3502e3502e3502e3502e3502d3502a350233501c3501a3501b3501c350203502135026350293502d3502b35027350203501d3501f350233502835029350273502635000000
-000100001055010550105500f5500f5500f5200f55028500295002a5002705027050270502705027050270502705021400204001f4001d4001d400123003a000360003600036000350003500035000310001b100
+000100001055010550105500f5500f5500f5200f55028500295002a5002b7503175024750247502475024750247502e7502d7501f4001d4001d400123003a000360003600036000350003500035000310001b100
 00030000053500535006350083500a3500d35010350143501b3500e350103501235015350183501c350223502c350343500f350113501535017350193501c3501f35023350293502d35031350313503335038350
 00020000206502565024650246502565026650266502665026650256502565024650236502265021650206501f6501e6501c6501b65019650186501765017650166501565014650136501265011650106500f650
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
