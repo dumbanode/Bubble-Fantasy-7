@@ -21,6 +21,7 @@ end
 function _draw()
 	state_mngr:draw()
 	trans_emit:draw()
+	debug_print()
 end
 
 world={
@@ -76,6 +77,13 @@ world={
 		init_shops()
 		init_enemies()
 		self:init_floor()
+		self.col_mngr=collisionmanager:init()
+		for i=0,6 do
+			local new_coin = coin:new({})
+  	new_coin:init() -- this will set a unique random position
+  	self.col_mngr:add_obj(new_coin)
+		end
+	
 	end,
 		
 	update=function(self)
@@ -84,7 +92,8 @@ world={
 		update_enemies()
 		self.b_parts_emit:update()
 		self:update_distance()
-		self:update_coins()
+		self.col_mngr:update()
+		--self:update_coins()
 		--update_shops()
 	end,
 	
@@ -179,8 +188,9 @@ world={
 		self.b_parts_emit:draw()
 		draw_enemies()
 		self:draw_env()
-		draw_hud_upgrades()
-		self:draw_coins()
+		--draw_hud_upgrades()
+		--self:draw_coins()
+		self.col_mngr:draw()
 		draw_shops()
 		self:draw_hud()
 	end,
@@ -359,36 +369,14 @@ function get_elapsed()
 end
 
 function debug_print()
-	print(
-		plr.pos.x_imp,
-		7
-	)
-	print(
-		plr.pos.y_imp,
-		7
-	)
-	print(
-		plr.pos.x,
-		7
-	)
-	print(
-		plr.pos.y,
-		7
-	)
-	print(
-		world.dim.max_x,
-		7
-	)
-	print(
-		world.dim.min_x,
-		7
-	)
-	print(
-		count(
-					world.b_parts_emit.parts
-		),
-		7
-	)
+	if world.col_mngr then
+		print(
+			count(
+						world.col_mngr.objects
+			),
+			7
+		)
+	end
 end
 
 -- take two tables with coords
@@ -796,19 +784,102 @@ equip_lvl={
 
 -- create a base class
 -- for all pickupables
-
 -- on_collision()
+
+collisionmanager=
+{
+	init=function(self)
+		self.objects={}
+		return self
+	end,
+	
+	add_obj=function(self,to_add)
+		add(self.objects,to_add)
+	end,
+	
+	update=function(self)
+		self:update_objects()
+		self:check_col()
+	end,
+	
+	update_objects=function(self)
+		for obj in all(self.objects) do
+			obj:update()
+		end
+	end,
+	
+	check_col=function(self)
+		to_remove = {}
+		-- check if each obj has
+		-- collided with player
+		for obj in all(self.objects) do
+			if check_col(plr, obj) then
+				-- exec callback
+				result=obj:on_collide()
+				-- check if remove
+				if not result then
+					add(to_remove, obj)
+				end
+			end
+		end
+		
+		-- remove elements
+		for obj in all(to_remove) do
+			del(self.objects, obj)
+		end
+	end,
+	
+	draw=function(self)
+		for obj in all(self.objects) do
+			obj:draw()
+		end
+	end,
+	
+}
+
+collidable=obj:new({
+	on_collide=function(self)
+	end
+})
+
+coin=collidable:new({
+	on_collide=function(self)
+		sfx(5)
+		plr.status.coins+=1
+		return false
+	end,
+
+	init=function(self)
+		self.pos={
+					x=18+rnd(90),
+					y=-10-rnd(120),
+		}
+		return self
+	end,
+	
+	update=function(self)
+		self.pos.y+=world.speed
+	 if self.pos.y>130 then
+	 	return false
+	 end
+	 return true
+	end,
+	
+	draw=function(self)
+		spr(
+			20,
+			self.pos.x,
+			self.pos.y
+		)
+	end
+})
+
+-------------------------
 
 -- spawn powerups and coins
 max_num_coins=20
 
-collidable=obj:new({
-	on_collide=function(self)
-	
-	end
-})
-
-coin=obj:new({
+coin_bak=obj:new({
 	update=function(self)
 		self.pos.y+=world.speed
 	 if self.pos.y>130 then
@@ -825,27 +896,6 @@ coin=obj:new({
 		)
 		end
 })
-
-
-function draw_hud_upgrades()
-	-- draw the staff
-	spr_to_use=64
-	if plr.status.level>1 then
-		spr_to_use=66
-	end
-	spr(
-		spr_to_use, 
-		110, 50, 2, 2)
-		
-	-- draw the shield
-	spr_to_use=96
-	if plr.status.level>2 then
-		spr_to_use=98
-	end
-	spr(
-		spr_to_use, 
-		110, 70, 2, 2)
-end
 
 
 -- shops --
@@ -919,6 +969,29 @@ function check_shop_collision()
 		end
 	end
 	
+end
+
+
+---------------------------
+
+function draw_hud_upgrades()
+	-- draw the staff
+	spr_to_use=64
+	if plr.status.level>1 then
+		spr_to_use=66
+	end
+	spr(
+		spr_to_use, 
+		110, 50, 2, 2)
+		
+	-- draw the shield
+	spr_to_use=96
+	if plr.status.level>2 then
+		spr_to_use=98
+	end
+	spr(
+		spr_to_use, 
+		110, 70, 2, 2)
 end
 -->8
 --game state
@@ -1062,8 +1135,9 @@ game_over=state:new({
 	name="game_over",
 	
 	init=function(self)
-			self.score=get_elapsed()
-			sfx(1)
+		world:init()
+		self.score=get_elapsed()
+		sfx(1)
 	end,
 	
 	update=function(self)
